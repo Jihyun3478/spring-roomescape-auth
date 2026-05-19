@@ -197,7 +197,7 @@
 
     function deleteReservation(id) {
         if (!confirm('정말 취소하시겠습니까?')) return;
-        fetch(`/reservations/${id}`, { method: 'DELETE' })
+        fetch(`/admin/reservations/${id}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
                     alert('예약이 취소되었습니다.');

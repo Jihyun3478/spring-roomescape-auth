@@ -1,6 +1,7 @@
 package roomescape.controller;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.BDDMockito.given;
 
 import io.restassured.RestAssured;
@@ -35,6 +36,19 @@ public class AdminReservationControllerTest {
     }
 
     @Test
+    void 예약을_추가한다() {
+        // given
+        int timeId = createTime("10:00");
+        int themeId = createTheme("방탈출1", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
+
+        // when & then
+        createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId)
+                .statusCode(201)
+                .body("id", notNullValue())
+                .header("Location", "/admin/reservations/1");
+    }
+
+    @Test
     void 예약을_조회한다() {
         // given
         int timeId = createTime("10:00");
@@ -43,10 +57,26 @@ public class AdminReservationControllerTest {
 
         // when & then
         RestAssured.given().log().all()
-                .when().get("/reservations")
+                .when().get("/admin/reservations")
                 .then().log().all()
                 .statusCode(200)
                 .body("name", hasItem("브라운"));
+    }
+
+    @Test
+    void 예약을_삭제한다() {
+        // given
+        int timeId = createTime("10:00");
+        int themeId = createTheme("방탈출11", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
+        int reservationId = createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId)
+                .statusCode(201)
+                .extract().path("id");
+
+        // when & then
+        RestAssured.given().log().all()
+                .when().delete("/admin/reservations/" + reservationId)
+                .then().log().all()
+                .statusCode(204);
     }
 
     private int createTime(String startAt) {
@@ -71,7 +101,7 @@ public class AdminReservationControllerTest {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
                 .body(Map.of("name", name, "date", date, "timeId", timeId, "themeId", themeId))
-                .when().post("/reservations")
+                .when().post("/admin/reservations")
                 .then().log().all();
     }
 }
