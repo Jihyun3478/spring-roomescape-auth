@@ -1,3 +1,7 @@
+-- user
+INSERT INTO users (email, password, name, role) VALUES ('admin@example.com', 'password', '관리자', 'ADMIN');
+INSERT INTO users (email, password, name, role) VALUES ('user@example.com', 'password', '사용자', 'MEMBER');
+
 -- reservation_time
 INSERT INTO reservation_time (start_at)
 VALUES ('10:00:00'),
