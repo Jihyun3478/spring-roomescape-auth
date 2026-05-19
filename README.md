@@ -62,10 +62,8 @@
 # API 명세서
 
 ## 인증 불필요
- 
----
 
-## 로그인
+### 로그인
 
 <details>
 <summary>Request</summary>
@@ -108,8 +106,8 @@ Authorization: Bearer {token}
 </details>
 
 ---
- 
-## 사용자 - 예약 시간 전체 조회
+
+### 사용자 - 예약 시간 전체 조회
  
 <details>
 <summary>Query Parameter</summary>
@@ -170,8 +168,8 @@ Content-Type: application/json
 </details>
 
 ---
- 
-## 사용자 - 테마 전체 조회
+
+### 사용자 - 테마 전체 조회
  
 <details>
 <summary>Request</summary>
@@ -212,8 +210,8 @@ Content-Type: application/json
 </details>
 
 ---
- 
-## 사용자 - 인기 테마 조회
+
+### 사용자 - 인기 테마 조회
  
 <details>
 <summary>Request</summary>
@@ -256,10 +254,8 @@ Content-Type: application/json
 ---
  
 ## 인증 필요 - 사용자
- 
----
- 
-## 로그아웃
+
+### 로그아웃
  
 <details>
 <summary>Request</summary>
@@ -296,8 +292,8 @@ HTTP/1.1 204
 </details>
 
 ---
- 
-## 사용자 - 예약 추가
+
+### 사용자 - 예약 추가
  
 <details>
 <summary>Request</summary>
@@ -374,8 +370,8 @@ Location: /reservations/1
 </details>
 
 ---
- 
-## 사용자 - 내 예약 조회
+
+### 사용자 - 내 예약 조회
  
 <details>
 <summary>Request</summary>
@@ -431,8 +427,8 @@ Content-Type: application/json
 </details>
 
 ---
- 
-## 사용자 - 예약 날짜·시간 변경
+
+### 사용자 - 예약 날짜·시간 변경
  
 <details>
 <summary>Request</summary>
@@ -501,8 +497,8 @@ Content-Type: application/json
 </details>
 
 ---
- 
-## 사용자 - 예약 삭제
+
+### 사용자 - 예약 삭제
  
 <details>
 <summary>Request</summary>
@@ -544,10 +540,8 @@ HTTP/1.1 204
 ---
  
 ## 인증 필요 - 관리자
- 
----
- 
-## 관리자 - 예약 시간 추가
+
+### 관리자 - 예약 시간 추가
  
 <details>
 <summary>Request</summary>
@@ -599,8 +593,8 @@ Location: /admin/times/1
 </details>
 
 ---
- 
-## 관리자 - 예약 시간 삭제
+
+### 관리자 - 예약 시간 삭제
  
 <details>
 <summary>Request</summary>
@@ -643,8 +637,8 @@ HTTP/1.1 204
 </details>
 
 ---
- 
-## 관리자 - 테마 추가
+
+### 관리자 - 테마 추가
  
 <details>
 <summary>Request</summary>
@@ -718,8 +712,8 @@ Location: /admin/themes/1
 </details>
 
 ---
- 
-## 관리자 - 테마 삭제
+
+### 관리자 - 테마 삭제
  
 <details>
 <summary>Request</summary>
@@ -762,8 +756,8 @@ HTTP/1.1 204
 </details>
 
 ---
- 
-## 관리자 - 예약 추가
+
+### 관리자 - 예약 추가
  
 <details>
 <summary>Request</summary>
@@ -847,8 +841,8 @@ Location: /admin/reservations/1
 </details>
 
 ---
- 
-## 관리자 - 예약 전체 조회
+
+### 관리자 - 예약 전체 조회
  
 <details>
 <summary>Request</summary>
@@ -905,7 +899,7 @@ Content-Type: application/json
 
 ---
  
-## 관리자 - 예약 삭제
+### 관리자 - 예약 삭제
  
 <details>
 <summary>Request</summary>
