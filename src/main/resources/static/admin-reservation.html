@@ -108,7 +108,7 @@
     document.getElementById('reservation-form').addEventListener('submit', addReservation);
 
     function fetchReservations() {
-        fetch('/reservations')
+        fetch('/admin/reservations')
             .then(response => response.json())
             .then(reservations => {
                 const tbody = document.getElementById('reservation-table-body');
@@ -178,7 +178,7 @@
             name: document.getElementById('name').value
         };
 
-        fetch('/reservations', {
+        fetch('/admin/reservations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
