@@ -11,10 +11,12 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import roomescape.DatabaseInitializer;
 import roomescape.common.config.ClockProvider;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
@@ -24,13 +26,28 @@ public class ThemeControllerTest {
     @MockitoBean
     private ClockProvider clockProvider;
 
+    @Autowired
+    private DatabaseInitializer databaseInitializer;
+
+    private String adminToken;
+
     @BeforeEach
     void setUp() {
+        databaseInitializer.insertDefaultUsers();
+
         given(clockProvider.getClock())
                 .willReturn(Clock.fixed(
                         Instant.parse("2026-04-28T09:00:00Z"),
                         ZoneOffset.UTC
                 ));
+
+        adminToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "admin@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
     }
 
     @Test
@@ -49,6 +66,7 @@ public class ThemeControllerTest {
 
     @Test
     void 인기_테마를_조회한다() {
+        // when & then
         RestAssured.given().log().all()
                 .when().get("/themes/popular")
                 .then().log().all()
@@ -59,9 +77,9 @@ public class ThemeControllerTest {
     private void createTheme(String name, String description, String thumbnail) {
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("name", name, "description", description, "thumbnail", thumbnail))
                 .when().post("/admin/themes")
-                .then().statusCode(201)
-                .extract().jsonPath().getInt("id");
+                .then().statusCode(201);
     }
 }

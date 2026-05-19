@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import roomescape.domain.Reservation;
 import roomescape.domain.ReservationTime;
 import roomescape.domain.Theme;
+import roomescape.domain.User;
 
 public record ReservationRequest(
         @NotBlank(message = "예약자명은 필수값 입니다.")
@@ -18,9 +19,12 @@ public record ReservationRequest(
 
         long timeId,
         long themeId
-
 ) {
+    public Reservation toReservation(ReservationTime reservationTime, Theme theme, User user) {
+        return Reservation.createWithoutId(user.getName(), date, reservationTime, theme, user);
+    }
+
     public Reservation toReservation(ReservationTime reservationTime, Theme theme) {
-        return Reservation.createWithoutId(name, date, reservationTime, theme);
+        return Reservation.createWithoutId(name, date, reservationTime, theme, null);
     }
 }

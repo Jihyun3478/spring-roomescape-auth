@@ -15,11 +15,11 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import roomescape.DatabaseInitializer;
 import roomescape.common.config.ClockProvider;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -29,13 +29,37 @@ public class ReservationControllerTest {
     @MockitoBean
     private ClockProvider clockProvider;
 
+    @Autowired
+    private DatabaseInitializer databaseInitializer;
+
+    private String adminToken;
+    private String userToken;
+
     @BeforeEach
     void setUp() {
+        databaseInitializer.insertDefaultUsers();
+
         given(clockProvider.getClock())
                 .willReturn(Clock.fixed(
                         Instant.parse("2026-04-28T09:00:00Z"),
                         ZoneOffset.UTC
                 ));
+
+        adminToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "admin@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
+
+        userToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "user@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
     }
 
     @Test
@@ -45,7 +69,7 @@ public class ReservationControllerTest {
         int themeId = createTheme("방탈출1", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
 
         // when & then
-        createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId)
+        createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId)
                 .statusCode(201)
                 .body("id", notNullValue())
                 .header("Location", "/reservations/1");
@@ -59,22 +83,8 @@ public class ReservationControllerTest {
         int themeId2 = createTheme("방탈출2", "다함께 탈출해요 방탈출2", "https://asdfsdf.sdfssdafdasf");
 
         // when & then
-        createReservation("로지", LocalDate.now().plusDays(1).toString(), timeId, themeId1).statusCode(201)
-                .body("name", is("로지"));
-        createReservation("러키", LocalDate.now().plusDays(1).toString(), timeId, themeId2).statusCode(201)
-                .body("name", is("러키"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"", "방탈출마스터홍길동김아무개"})
-    void 예약자_이름이_잘못된_값이면_400을_반환한다(String name) {
-        // given
-        int timeId = createTime("10:00");
-        int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
-
-        // when & then
-        createReservation(name, LocalDate.now().plusDays(1).toString(), timeId, themeId)
-                .statusCode(400);
+        createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId1).statusCode(201);
+        createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId2).statusCode(201);
     }
 
     @Test
@@ -86,7 +96,8 @@ public class ReservationControllerTest {
         // when & then
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
-                .body(Map.of("name", "브라운", "date", "잘못된날짜", "timeId", timeId, "themeId", themeId))
+                .header("Authorization", "Bearer " + userToken)
+                .body(Map.of("date", "잘못된날짜", "timeId", timeId, "themeId", themeId))
                 .when().post("/reservations")
                 .then().log().all()
                 .statusCode(400);
@@ -98,11 +109,10 @@ public class ReservationControllerTest {
         int timeId = createTime("10:00");
         int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
         String date = LocalDate.now().plusDays(1).toString();
-        createReservation("브라운", date, timeId, themeId).statusCode(201);
+        createReservation(date, timeId, themeId).statusCode(201);
 
         // when & then
-        createReservation("로지", date, timeId, themeId)
-                .statusCode(409);
+        createReservation(date, timeId, themeId).statusCode(409);
     }
 
     @Test
@@ -112,38 +122,23 @@ public class ReservationControllerTest {
         int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
 
         // when & then
-        createReservation("브라운", "2026-04-01", timeId, themeId)
-                .statusCode(422);
+        createReservation("2026-04-01", timeId, themeId).statusCode(422);
     }
 
     @Test
-    void 예약을_조회한다() {
+    void 내_예약을_조회한다() {
         // given
         int timeId = createTime("10:00");
         int themeId = createTheme("방탈출1", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
-        createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId).statusCode(201);
+        createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId).statusCode(201);
 
         // when & then
         RestAssured.given().log().all()
-                .when().get("/reservations")
+                .header("Authorization", "Bearer " + userToken)
+                .when().get("/reservations/mine")
                 .then().log().all()
                 .statusCode(200)
-                .body("name", hasItem("브라운"));
-    }
-
-    @Test
-    void 예약자_이름으로_예약을_조회한다() {
-        // given
-        int timeId = createTime("10:00");
-        int themeId = createTheme("방탈출1", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
-        createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId).statusCode(201);
-
-        // when & then
-        RestAssured.given().log().all()
-                .when().get("/reservations?name=브라운")
-                .then().log().all()
-                .statusCode(200)
-                .body("name", hasItem("브라운"));
+                .body("name", hasItem("사용자"));
     }
 
     @Test
@@ -152,13 +147,14 @@ public class ReservationControllerTest {
         int timeId1 = createTime("10:00");
         int timeId2 = createTime("11:00");
         int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
-        int reservationId = createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId1, themeId)
+        int reservationId = createReservation(LocalDate.now().plusDays(1).toString(), timeId1, themeId)
                 .statusCode(201)
                 .extract().path("id");
 
         // when & then
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + userToken)
                 .body(Map.of("date", LocalDate.now().plusDays(2).toString(), "timeId", timeId2))
                 .when().patch("/reservations/" + reservationId)
                 .then().log().all()
@@ -170,6 +166,7 @@ public class ReservationControllerTest {
     void 존재하지_않는_예약을_변경하면_404를_반환한다() {
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + userToken)
                 .body(Map.of("date", LocalDate.now().plusDays(1).toString(), "timeId", 1))
                 .when().patch("/reservations/999")
                 .then().log().all()
@@ -181,13 +178,14 @@ public class ReservationControllerTest {
         // given
         int timeId = createTime("10:00");
         int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
-        int reservationId = createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId)
+        int reservationId = createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId)
                 .statusCode(201)
                 .extract().path("id");
 
         // when & then
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + userToken)
                 .body(Map.of("date", "2026-04-01", "timeId", timeId))
                 .when().patch("/reservations/" + reservationId)
                 .then().log().all()
@@ -200,14 +198,29 @@ public class ReservationControllerTest {
         int timeId = createTime("10:00");
         int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
         String date = LocalDate.now().plusDays(1).toString();
-        createReservation("브라운", date, timeId, themeId).statusCode(201);
-        int reservationId2 = createReservation("로지", LocalDate.now().plusDays(2).toString(), timeId, themeId)
-                .statusCode(201)
+        createReservation(date, timeId, themeId).statusCode(201);
+
+        // 다른 유저로 두 번째 예약
+        String token2 = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "admin@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
+
+        int reservationId2 = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token2)
+                .body(Map.of("date", LocalDate.now().plusDays(2).toString(), "timeId", timeId, "themeId", themeId))
+                .when().post("/reservations")
+                .then().statusCode(201)
                 .extract().path("id");
 
         // when & then
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + token2)
                 .body(Map.of("date", date, "timeId", timeId))
                 .when().patch("/reservations/" + reservationId2)
                 .then().log().all()
@@ -219,20 +232,37 @@ public class ReservationControllerTest {
         // given
         int timeId = createTime("10:00");
         int themeId = createTheme("방탈출11", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
-        int reservationId = createReservation("브라운", LocalDate.now().plusDays(1).toString(), timeId, themeId)
+        int reservationId = createReservation(LocalDate.now().plusDays(1).toString(), timeId, themeId)
                 .statusCode(201)
                 .extract().path("id");
 
         // when & then
         RestAssured.given().log().all()
+                .header("Authorization", "Bearer " + userToken)
                 .when().delete("/reservations/" + reservationId)
                 .then().log().all()
                 .statusCode(204);
     }
 
+    @Test
+    void 토큰_없이_예약하면_401을_반환한다() {
+        // given
+        int timeId = createTime("10:00");
+        int themeId = createTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
+
+        // when & then
+        RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("date", LocalDate.now().plusDays(1).toString(), "timeId", timeId, "themeId", themeId))
+                .when().post("/reservations")
+                .then().log().all()
+                .statusCode(401);
+    }
+
     private int createTime(String startAt) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("startAt", startAt))
                 .when().post("/admin/times")
                 .then().statusCode(201)
@@ -242,16 +272,18 @@ public class ReservationControllerTest {
     private int createTheme(String name, String description, String thumbnail) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("name", name, "description", description, "thumbnail", thumbnail))
                 .when().post("/admin/themes")
                 .then().statusCode(201)
                 .extract().jsonPath().getInt("id");
     }
 
-    private ValidatableResponse createReservation(String name, String date, int timeId, int themeId) {
+    private ValidatableResponse createReservation(String date, int timeId, int themeId) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
-                .body(Map.of("name", name, "date", date, "timeId", timeId, "themeId", themeId))
+                .header("Authorization", "Bearer " + userToken)
+                .body(Map.of("date", date, "timeId", timeId, "themeId", themeId))
                 .when().post("/reservations")
                 .then().log().all();
     }

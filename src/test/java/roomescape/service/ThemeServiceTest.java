@@ -101,13 +101,10 @@ class ThemeServiceTest {
         LocalDate today = LocalDate.now(clockProvider.getClock()); // 2026-05-06
         ReservationTime time = timeDao.insert(ReservationTime.createWithoutId(LocalTime.of(10, 0)));
 
-        // 공포의 저택: 3건
-        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, popularTheme));
-        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(2), time, popularTheme));
-        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(3), time, popularTheme));
-
-        // 사라진 연구소: 1건
-        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, normalTheme));
+        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, popularTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(2), time, popularTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(3), time, popularTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, normalTheme, null));
 
         // when
         List<ThemeResponse> responses = themeService.getPopularThemes();
@@ -137,7 +134,7 @@ class ThemeServiceTest {
         // given
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         ReservationTime time = timeDao.insert(ReservationTime.createWithoutId(LocalTime.of(10, 0)));
-        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme));
+        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme, null));
 
         // when & then
         assertThatThrownBy(() -> themeService.deleteTheme(theme.getId()))

@@ -264,6 +264,6 @@ class ThemeDaoTest {
     }
 
     private void saveReservation(LocalDate date, ReservationTime time, Theme theme) {
-        reservationDao.insert(Reservation.createWithoutId("예약자", date, time, theme));
+        reservationDao.insert(Reservation.createWithoutId("예약자", date, time, theme, null));
     }
 }

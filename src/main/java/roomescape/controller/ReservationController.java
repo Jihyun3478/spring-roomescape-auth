@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import roomescape.dto.request.ReservationRequest;
+import roomescape.common.auth.LoginUser;
+import roomescape.domain.User;
 import roomescape.dto.request.UpdateReservationRequest;
+import roomescape.dto.request.UserReservationRequest;
 import roomescape.dto.response.ReservationResponse;
 import roomescape.service.ReservationService;
 
@@ -30,28 +31,24 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<ReservationResponse> addReservation(@Valid @RequestBody ReservationRequest request) {
-        ReservationResponse response = reservationService.addReservation(request);
+    public ResponseEntity<ReservationResponse> addReservation(
+            @Valid @RequestBody UserReservationRequest request,
+            @LoginUser User user) {
+        ReservationResponse response = reservationService.addReservation(request, user);
         return ResponseEntity.created(URI.create(LOCATION_DEFAULT_VALUE + response.id()))
                 .body(response);
     }
 
-    @GetMapping
-    public ResponseEntity<List<ReservationResponse>> getReservations() {
-        List<ReservationResponse> responses = reservationService.getAllReservations();
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping(params = "name")
-    public ResponseEntity<List<ReservationResponse>> getReservationByName(@RequestParam String name) {
-        List<ReservationResponse> responses = reservationService.getMyReservation(name);
+    @GetMapping("/mine")
+    public ResponseEntity<List<ReservationResponse>> getMyReservations(@LoginUser User user) {
+        List<ReservationResponse> responses = reservationService.getMyReservation(user);
         return ResponseEntity.ok(responses);
     }
 
     @PatchMapping("/{reservationId}")
-    public ResponseEntity<ReservationResponse> updateReservation(@PathVariable("reservationId") Long reservationId,
-                                                                 @RequestBody
-                                                                 UpdateReservationRequest request) {
+    public ResponseEntity<ReservationResponse> updateReservation(
+            @PathVariable("reservationId") Long reservationId,
+            @RequestBody UpdateReservationRequest request) {
         ReservationResponse response = reservationService.update(reservationId, request);
         return ResponseEntity.ok(response);
     }
@@ -59,7 +56,6 @@ public class ReservationController {
     @DeleteMapping("/{reservationId}")
     public ResponseEntity<Void> deleteReservation(@PathVariable("reservationId") Long reservationId) {
         reservationService.delete(reservationId);
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

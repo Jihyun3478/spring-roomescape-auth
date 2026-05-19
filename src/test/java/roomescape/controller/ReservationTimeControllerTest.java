@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import roomescape.DatabaseInitializer;
 import roomescape.common.config.ClockProvider;
 import roomescape.dto.response.ReservationTimeResponse;
 
@@ -28,13 +30,37 @@ public class ReservationTimeControllerTest {
     @MockitoBean
     private ClockProvider clockProvider;
 
+    @Autowired
+    private DatabaseInitializer databaseInitializer;
+
+    private String adminToken;
+    private String userToken;
+
     @BeforeEach
     void setUp() {
+        databaseInitializer.insertDefaultUsers();
+
         given(clockProvider.getClock())
                 .willReturn(Clock.fixed(
                         Instant.parse("2026-04-28T09:00:00Z"),
                         ZoneOffset.UTC
                 ));
+
+        adminToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "admin@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
+
+        userToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "user@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
     }
 
     @Test
@@ -43,7 +69,7 @@ public class ReservationTimeControllerTest {
         int timeId = createTime("09:00");
         int themeId = createTheme("방탈출1", "다함께 탈출해요 방탈출", "https://asdfsdf.sdfs");
         LocalDate date = LocalDate.now().plusDays(1);
-        createReservation("러키", date.toString(), timeId, themeId);
+        createReservation(date.toString(), timeId, themeId);
 
         // when
         List<ReservationTimeResponse> responses = RestAssured.given().log().all()
@@ -61,6 +87,7 @@ public class ReservationTimeControllerTest {
     private int createTime(String startAt) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("startAt", startAt))
                 .when().post("/admin/times")
                 .then().statusCode(201)
@@ -70,16 +97,18 @@ public class ReservationTimeControllerTest {
     private int createTheme(String name, String description, String thumbnail) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("name", name, "description", description, "thumbnail", thumbnail))
                 .when().post("/admin/themes")
                 .then().statusCode(201)
                 .extract().jsonPath().getInt("id");
     }
 
-    private void createReservation(String name, String date, int timeId, int themeId) {
+    private void createReservation(String date, int timeId, int themeId) {
         RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
-                .body(Map.of("name", name, "date", date, "timeId", timeId, "themeId", themeId))
+                .header("Authorization", "Bearer " + userToken)
+                .body(Map.of("date", date, "timeId", timeId, "themeId", themeId))
                 .when().post("/reservations")
                 .then().statusCode(201);
     }

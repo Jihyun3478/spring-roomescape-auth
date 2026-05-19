@@ -124,6 +124,6 @@ class ReservationTimeServiceTest {
     }
 
     private void saveReservation(String name, LocalDate date, ReservationTime time, Theme theme) {
-        reservationDao.insert(Reservation.createWithoutId(name, date, time, theme));
+        reservationDao.insert(Reservation.createWithoutId(name, date, time, theme, null));
     }
 }

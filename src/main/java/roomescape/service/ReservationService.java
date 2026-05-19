@@ -16,8 +16,10 @@ import roomescape.dao.ThemeDao;
 import roomescape.domain.Reservation;
 import roomescape.domain.ReservationTime;
 import roomescape.domain.Theme;
+import roomescape.domain.User;
 import roomescape.dto.request.ReservationRequest;
 import roomescape.dto.request.UpdateReservationRequest;
+import roomescape.dto.request.UserReservationRequest;
 import roomescape.dto.response.ReservationResponse;
 
 @Service
@@ -28,15 +30,28 @@ public class ReservationService {
     private final ThemeDao themeDao;
     private final ClockProvider clockProvider;
 
-    public ReservationService(ReservationDao reservationDao, ReservationTimeDao reservationTimeDao, ThemeDao themeDao,
-                              ClockProvider clockProvider) {
+    public ReservationService(ReservationDao reservationDao, ReservationTimeDao reservationTimeDao,
+                              ThemeDao themeDao, ClockProvider clockProvider) {
         this.reservationDao = reservationDao;
         this.reservationTimeDao = reservationTimeDao;
         this.themeDao = themeDao;
         this.clockProvider = clockProvider;
     }
 
-    public ReservationResponse addReservation(ReservationRequest request) {
+    public ReservationResponse addReservation(UserReservationRequest request, User user) {
+        ReservationTime reservationTime = getTime(request.timeId());
+        Theme theme = getTheme(request.themeId());
+
+        validateUniqueReservation(request.date(), request.timeId(), request.themeId());
+        validatePastDatetime(request.date(), reservationTime);
+
+        Reservation reservation = Reservation.createWithoutId(
+                user.getName(), request.date(), reservationTime, theme, user);
+        Reservation savedReservation = reservationDao.insert(reservation);
+        return ReservationResponse.from(savedReservation);
+    }
+
+    public ReservationResponse addReservationByAdmin(ReservationRequest request) {
         ReservationTime reservationTime = getTime(request.timeId());
         Theme theme = getTheme(request.themeId());
 
@@ -50,16 +65,14 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public List<ReservationResponse> getAllReservations() {
-        List<Reservation> reservations = reservationDao.select();
-        return reservations.stream()
+        return reservationDao.select().stream()
                 .map(ReservationResponse::from)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ReservationResponse> getMyReservation(String name) {
-        List<Reservation> reservations = reservationDao.selectByName(name);
-        return reservations.stream()
+    public List<ReservationResponse> getMyReservation(User user) {
+        return reservationDao.selectByUserId(user.getId()).stream()
                 .map(ReservationResponse::from)
                 .toList();
     }
@@ -109,7 +122,6 @@ public class ReservationService {
     private void validatePastDatetime(LocalDate date, ReservationTime reservationTime) {
         LocalDateTime now = LocalDateTime.now(clockProvider.getClock());
         LocalDateTime reservationDateAndTime = LocalDateTime.of(date, reservationTime.getStartAt());
-
         if (reservationDateAndTime.isBefore(now)) {
             throw new RoomEscapeException(ReservationErrorCode.PAST_DATETIME);
         }

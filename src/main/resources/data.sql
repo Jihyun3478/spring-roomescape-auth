@@ -29,7 +29,7 @@ VALUES ('공포의 저택', '오래된 저택에서 탈출하세요', 'https://e
        ('미스터리 호텔', '호텔에서 벌어진 사건을 해결하세요', 'https://example.com/theme11.jpg'),
        ('지하 벙커', '폐쇄된 지하 벙커에서 탈출하세요', 'https://example.com/theme12.jpg');
 
--- reservation
+-- reservation (user_id 없는 관리자 예약 데이터)
 -- theme_id 1: 12건
 INSERT INTO reservation (name, `date`, time_id, theme_id)
 VALUES ('예약자1', '2026-05-12', 1, 1),
@@ -143,3 +143,8 @@ VALUES ('예약자1', '2026-04-20', 1, 12),
        ('예약자9', '2026-04-20', 9, 12),
        ('예약자10', '2026-04-20', 1, 12),
        ('예약자11', '2026-04-20', 2, 12);
+
+-- 사용자(user_id=2) 예약 데이터 - 내 예약 조회 테스트용
+INSERT INTO reservation (name, `date`, time_id, theme_id, user_id)
+VALUES ('사용자', '2026-06-01', 1, 1, 2),
+       ('사용자', '2026-06-02', 2, 2, 2);

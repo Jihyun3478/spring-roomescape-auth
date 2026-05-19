@@ -14,9 +14,11 @@ import java.time.ZoneOffset;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import roomescape.DatabaseInitializer;
 import roomescape.common.config.ClockProvider;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -26,13 +28,28 @@ public class AdminReservationControllerTest {
     @MockitoBean
     private ClockProvider clockProvider;
 
+    @Autowired
+    private DatabaseInitializer databaseInitializer;
+
+    private String adminToken;
+
     @BeforeEach
     void setUp() {
+        databaseInitializer.insertDefaultUsers();
+
         given(clockProvider.getClock())
                 .willReturn(Clock.fixed(
                         Instant.parse("2026-04-28T09:00:00Z"),
                         ZoneOffset.UTC
                 ));
+
+        adminToken = RestAssured.given().log().all()
+                .contentType(ContentType.JSON)
+                .body(Map.of("email", "admin@example.com", "password", "password"))
+                .when().post("/login")
+                .then().statusCode(200)
+                .extract().header("Authorization")
+                .replace("Bearer ", "");
     }
 
     @Test
@@ -57,6 +74,7 @@ public class AdminReservationControllerTest {
 
         // when & then
         RestAssured.given().log().all()
+                .header("Authorization", "Bearer " + adminToken)
                 .when().get("/admin/reservations")
                 .then().log().all()
                 .statusCode(200)
@@ -74,6 +92,7 @@ public class AdminReservationControllerTest {
 
         // when & then
         RestAssured.given().log().all()
+                .header("Authorization", "Bearer " + adminToken)
                 .when().delete("/admin/reservations/" + reservationId)
                 .then().log().all()
                 .statusCode(204);
@@ -82,6 +101,7 @@ public class AdminReservationControllerTest {
     private int createTime(String startAt) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("startAt", startAt))
                 .when().post("/admin/times")
                 .then().statusCode(201)
@@ -91,6 +111,7 @@ public class AdminReservationControllerTest {
     private int createTheme(String name, String description, String thumbnail) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("name", name, "description", description, "thumbnail", thumbnail))
                 .when().post("/admin/themes")
                 .then().statusCode(201)
@@ -100,9 +121,9 @@ public class AdminReservationControllerTest {
     private ValidatableResponse createReservation(String name, String date, int timeId, int themeId) {
         return RestAssured.given().log().all()
                 .contentType(ContentType.JSON)
+                .header("Authorization", "Bearer " + adminToken)
                 .body(Map.of("name", name, "date", date, "timeId", timeId, "themeId", themeId))
                 .when().post("/admin/reservations")
                 .then().log().all();
     }
 }
-

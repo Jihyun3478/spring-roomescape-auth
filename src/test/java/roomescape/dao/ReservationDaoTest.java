@@ -32,7 +32,7 @@ class ReservationDaoTest {
         // given
         ReservationTime savedTime = saveTime(10, 0);
         Theme savedTheme = saveTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
-        Reservation reservation = Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), savedTime, savedTheme);
+        Reservation reservation = Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), savedTime, savedTheme, null);
 
         // when
         Reservation saved = reservationDao.insert(reservation);
@@ -52,11 +52,11 @@ class ReservationDaoTest {
         Theme savedTheme = saveTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
         LocalDate date = LocalDate.of(2026, 5, 5);
 
-        reservationDao.insert(Reservation.createWithoutId("브라운", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("러로", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("밤밤", date, savedTime, savedTheme));
+        reservationDao.insert(Reservation.createWithoutId("브라운", date, savedTime, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("러로", date, savedTime, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("밤밤", date, savedTime, savedTheme, null));
 
         // when
         List<Reservation> reservations = reservationDao.select();
@@ -69,34 +69,11 @@ class ReservationDaoTest {
     }
 
     @Test
-    void 예약자_이름에_해당하는_예약_목록을_조회한다() {
-        // given
-        ReservationTime savedTime = saveTime(10, 0);
-        Theme savedTheme = saveTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
-        LocalDate date = LocalDate.of(2026, 5, 5);
-
-        reservationDao.insert(Reservation.createWithoutId("브라운", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("러로", date, savedTime, savedTheme));
-        reservationDao.insert(Reservation.createWithoutId("밤밤", date, savedTime, savedTheme));
-
-        // when
-        List<Reservation> reservations = reservationDao.selectByName("로지");
-
-        // then
-        assertAll(
-                () -> assertThat(reservations).hasSize(1),
-                () -> assertThat(reservations.getFirst().getName()).isEqualTo("로지")
-        );
-    }
-
-    @Test
     void 특정_시간에_예약이_존재하면_true를_반환한다() {
         // given
         ReservationTime time = saveTime(10, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
-        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme));
+        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme, null));
 
         // when
         boolean result = reservationDao.existsByTimeId(time.getId());
@@ -119,7 +96,7 @@ class ReservationDaoTest {
         // given
         ReservationTime time = saveTime(10, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
-        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme));
+        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme, null));
 
         // when
         boolean result = reservationDao.existsByThemeId(theme.getId());
@@ -145,8 +122,8 @@ class ReservationDaoTest {
         Theme theme2 = saveTheme("방탈출2", "설명2", "https://asdfsdf.sdfs");
         LocalDate date = LocalDate.of(2026, 5, 5);
 
-        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, theme1));
-        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, theme2));
+        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, theme1, null));
+        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, theme2, null));
 
         // when
         List<Reservation> result = reservationDao.selectByThemeIdAndDate(theme1.getId(), date);
@@ -164,7 +141,7 @@ class ReservationDaoTest {
         ReservationTime time = saveTime(10, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         LocalDate date = LocalDate.of(2026, 5, 5);
-        reservationDao.insert(Reservation.createWithoutId("브라운", date, time, theme));
+        reservationDao.insert(Reservation.createWithoutId("브라운", date, time, theme, null));
 
         // when
         boolean result = reservationDao.existsByDateAndTimeIdAndThemeId(date, time.getId(), theme.getId());
@@ -194,7 +171,7 @@ class ReservationDaoTest {
         ReservationTime time2 = saveTime(11, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         Reservation saved = reservationDao.insert(
-                Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time1, theme));
+                Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time1, theme, null));
 
         // when
         Reservation updated = reservationDao.update(saved.getId(), LocalDate.of(2026, 5, 6), time2.getId());
@@ -212,7 +189,7 @@ class ReservationDaoTest {
         ReservationTime savedTime = saveTime(10, 0);
         Theme savedTheme = saveTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
         Reservation saved = reservationDao.insert(
-                Reservation.createWithoutId("예약1", LocalDate.of(2026, 5, 5), savedTime, savedTheme));
+                Reservation.createWithoutId("예약1", LocalDate.of(2026, 5, 5), savedTime, savedTheme, null));
 
         // when
         reservationDao.delete(saved.getId());
