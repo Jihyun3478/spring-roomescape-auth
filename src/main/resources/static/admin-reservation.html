@@ -6,20 +6,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div id="password-overlay"
-     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div class="card shadow" style="width: 300px;">
-        <div class="card-body">
-            <h5 class="card-title">관리자 인증</h5>
-            <p class="card-text">비밀번호를 입력하세요.</p>
-            <input class="form-control mb-3" id="admin-password" onkeyup="if(event.key === 'Enter') checkPassword()"
-                   placeholder="비밀번호"
-                   type="password">
-            <button class="btn btn-primary w-100" onclick="checkPassword()">확인</button>
-        </div>
-    </div>
-</div>
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="/">Roomescape Admin</a>
@@ -77,25 +63,15 @@
             <th>관리</th>
         </tr>
         </thead>
-        <tbody id="reservation-table-body">
-        <!-- 예약 목록 -->
-        </tbody>
+        <tbody id="reservation-table-body"></tbody>
     </table>
 </div>
 
 <script>
-    function checkPassword() {
-        const password = document.getElementById('admin-password').value;
-        if (password === '1234') {
-            sessionStorage.setItem('admin-authorized', 'true');
-            document.getElementById('password-overlay').style.display = 'none';
-        } else {
-            alert('비밀번호가 틀렸습니다.');
-        }
-    }
+    const token = sessionStorage.getItem('token');
 
-    if (sessionStorage.getItem('admin-authorized') === 'true') {
-        document.getElementById('password-overlay').style.display = 'none';
+    if (!token) {
+        window.location.href = '/login.html?redirect=/admin-reservation.html';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -108,23 +84,33 @@
     document.getElementById('reservation-form').addEventListener('submit', addReservation);
 
     function fetchReservations() {
-        fetch('/admin/reservations')
-            .then(response => response.json())
-            .then(reservations => {
-                const tbody = document.getElementById('reservation-table-body');
-                tbody.innerHTML = reservations.map(res => `
-                    <tr>
-                        <td>${res.id}</td>
-                        <td>${res.date}</td>
-                        <td>${res.time.startAt}</td>
-                        <td>${res.theme.name}</td>
-                        <td>${res.name}</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteReservation(${res.id})">삭제</button>
-                        </td>
-                    </tr>
-                `).join('');
-            });
+        fetch('/admin/reservations', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(response => {
+            if (response.status === 403) {
+                alert('관리자만 접근 가능합니다.');
+                window.location.href = '/';
+                return;
+            }
+            return response.json();
+        })
+        .then(reservations => {
+            if (!reservations) return;
+            const tbody = document.getElementById('reservation-table-body');
+            tbody.innerHTML = reservations.map(res => `
+                <tr>
+                    <td>${res.id}</td>
+                    <td>${res.date}</td>
+                    <td>${res.time.startAt}</td>
+                    <td>${res.theme.name}</td>
+                    <td>${res.name}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteReservation(${res.id})">삭제</button>
+                    </td>
+                </tr>
+            `).join('');
+        });
     }
 
     function fetchThemes() {
@@ -180,10 +166,18 @@
 
         fetch('/admin/reservations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
             body: JSON.stringify(payload)
         })
         .then(response => {
+            if (response.status === 403) {
+                alert('관리자만 접근 가능합니다.');
+                window.location.href = '/';
+                return;
+            }
             if (response.ok) {
                 alert('예약이 추가되었습니다.');
                 fetchReservations();
@@ -197,15 +191,23 @@
 
     function deleteReservation(id) {
         if (!confirm('정말 취소하시겠습니까?')) return;
-        fetch(`/admin/reservations/${id}`, { method: 'DELETE' })
-            .then(response => {
-                if (response.ok) {
-                    alert('예약이 취소되었습니다.');
-                    fetchReservations();
-                } else {
-                    alert('예약 취소 실패');
-                }
-            });
+        fetch(`/admin/reservations/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(response => {
+            if (response.status === 403) {
+                alert('관리자만 접근 가능합니다.');
+                window.location.href = '/';
+                return;
+            }
+            if (response.ok) {
+                alert('예약이 취소되었습니다.');
+                fetchReservations();
+            } else {
+                alert('예약 취소 실패');
+            }
+        });
     }
 </script>
 </body>

@@ -61,6 +61,15 @@
         <div class="navbar-nav">
             <a class="nav-link" href="/">홈</a>
             <a class="nav-link active" href="/reservation.html">예약하기</a>
+            <a class="nav-link" href="/my-reservations.html">내 예약</a>
+            <div class="nav-item dropdown" id="admin-menu" style="display:none;">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button">관리자</a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/admin-theme.html">테마 관리</a></li>
+                    <li><a class="dropdown-item" href="/admin-time.html">시간 관리</a></li>
+                    <li><a class="dropdown-item" href="/admin-reservation.html">예약 관리</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
@@ -86,17 +95,28 @@
             </div>
         </div>
 
-        <div class="mb-4">
-            <h5>4. 예약자 정보</h5>
-            <input class="form-control" id="reservation-name" placeholder="이름을 입력하세요" type="text">
-        </div>
-
         <button class="btn btn-primary w-100 btn-lg" disabled id="submit-reservation">예약 완료</button>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    const token = sessionStorage.getItem('token');
+
+    if (!token) {
+        window.location.href = '/login.html?redirect=/reservation.html';
+    }
+
+    function getRole() {
+        if (!token) return null;
+        const decoded = atob(token);
+        return decoded.split('&')[1].split('=')[1];
+    }
+
+    if (getRole() === 'ADMIN') {
+        document.getElementById('admin-menu').style.display = 'block';
+    }
+
     let selectedThemeId = null;
     let selectedTimeId = null;
 
@@ -107,7 +127,6 @@
         dateInput.value = today;
 
         fetchThemes();
-
         dateInput.addEventListener('change', fetchTimes);
         document.getElementById('submit-reservation').addEventListener('click', submitReservation);
     });
@@ -120,7 +139,9 @@
                 themeList.innerHTML = themes.map(theme => `
                     <div class="col-md-4">
                         <div class="card h-100 theme-item" data-id="${theme.id}" style="cursor: pointer;">
-                            <img src="${theme.thumbnail}" class="card-img-top" alt="${theme.name}" height="100" style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                            <img src="${theme.thumbnail}" class="card-img-top" alt="${theme.name}" height="100"
+                                 style="object-fit: cover;"
+                                 onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                             <div class="card-body p-2 text-center">
                                 <h6 class="card-title mb-0">${theme.name}</h6>
                             </div>
@@ -129,7 +150,7 @@
                 `).join('');
 
                 document.querySelectorAll('.theme-item').forEach(item => {
-                    item.addEventListener('click', function() {
+                    item.addEventListener('click', function () {
                         document.querySelectorAll('.theme-item').forEach(i => i.classList.remove('theme-selected'));
                         this.classList.add('theme-selected');
                         selectedThemeId = this.dataset.id;
@@ -162,7 +183,7 @@
                 `).join('');
 
                 document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
-                    slot.addEventListener('click', function() {
+                    slot.addEventListener('click', function () {
                         document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                         this.classList.add('selected');
                         selectedTimeId = this.dataset.id;
@@ -173,27 +194,23 @@
     }
 
     function checkValidation() {
-        const name = document.getElementById('reservation-name').value;
-        document.getElementById('submit-reservation').disabled = !(selectedThemeId && selectedTimeId && name);
+        document.getElementById('submit-reservation').disabled = !(selectedThemeId && selectedTimeId);
     }
 
-    document.getElementById('reservation-name').addEventListener('input', checkValidation);
-
     function submitReservation() {
-        const name = document.getElementById('reservation-name').value;
         const date = document.getElementById('reservation-date').value;
-
-        const payload = {
-            name: name,
-            date: date,
-            timeId: parseInt(selectedTimeId),
-            themeId: parseInt(selectedThemeId)
-        };
 
         fetch('/reservations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                date: date,
+                timeId: parseInt(selectedTimeId),
+                themeId: parseInt(selectedThemeId)
+            })
         })
         .then(response => {
             if (response.ok) return response.json();
