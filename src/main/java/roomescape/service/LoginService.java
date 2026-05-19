@@ -25,7 +25,7 @@ public class LoginService {
         if (!user.getPassword().equals(password)) {
             throw new RoomEscapeException(UserErrorCode.INVALID_PASSWORD);
         }
-        return createToken(user.getId());
+        return createToken(user);
     }
 
     public User findUserByToken(String token) {
@@ -34,12 +34,14 @@ public class LoginService {
                 .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
     }
 
-    private String createToken(Long userId) {
-        return Base64.getEncoder().encodeToString(("userId=" + userId).getBytes());
+    private String createToken(User user) {
+        return Base64.getEncoder().encodeToString(
+                ("userId=" + user.getId() + "&role=" + user.getRoleType().name()).getBytes()
+        );
     }
 
     private long extractUserId(String token) {
         String decoded = new String(Base64.getDecoder().decode(token));
-        return Long.parseLong(decoded.split("=")[1]);
+        return Long.parseLong(decoded.split("&")[0].split("=")[1]);
     }
 }
