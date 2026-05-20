@@ -3,6 +3,7 @@ package roomescape.dao;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,28 @@ class UserDaoTest {
     }
 
     @Test
+    void role로_유저_목록을_조회한다() {
+        // given
+        userDao.insert(User.createWithoutId("member1@test.com", "password", "브라운", RoleType.MEMBER));
+        userDao.insert(User.createWithoutId("member2@test.com", "password", "로지", RoleType.MEMBER));
+        userDao.insert(User.createWithoutId("admin@test.com", "password", "관리자", RoleType.ADMIN));
+
+        // when
+        List<User> members = userDao.select(RoleType.MEMBER);
+
+        // then
+        assertThat(members).hasSize(2);
+        assertThat(members).extracting(User::getRoleType)
+                .containsOnly(RoleType.MEMBER);
+    }
+
+    @Test
     void 이메일로_유저를_조회한다() {
         // given
         userDao.insert(User.createWithoutId("user@test.com", "password", "브라운", RoleType.MEMBER));
 
         // when
-        Optional<User> found = userDao.findByEmail("user@test.com");
+        Optional<User> found = userDao.selectByEmail("user@test.com");
 
         // then
         assertAll(
@@ -54,7 +71,7 @@ class UserDaoTest {
     @Test
     void 존재하지_않는_이메일로_조회하면_빈_객체를_반환한다() {
         // when
-        Optional<User> found = userDao.findByEmail("notexist@test.com");
+        Optional<User> found = userDao.selectByEmail("notexist@test.com");
 
         // then
         assertThat(found).isEmpty();
@@ -66,7 +83,7 @@ class UserDaoTest {
         User saved = userDao.insert(User.createWithoutId("user@test.com", "password", "브라운", RoleType.MEMBER));
 
         // when
-        Optional<User> found = userDao.findById(saved.getId());
+        Optional<User> found = userDao.selectById(saved.getId());
 
         // then
         assertAll(
@@ -79,7 +96,7 @@ class UserDaoTest {
     @Test
     void 존재하지_않는_아이디로_조회하면_빈_객체를_반환한다() {
         // when
-        Optional<User> found = userDao.findById(999L);
+        Optional<User> found = userDao.selectById(999L);
 
         // then
         assertThat(found).isEmpty();

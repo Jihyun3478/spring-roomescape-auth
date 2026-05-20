@@ -15,6 +15,7 @@ import roomescape.common.exception.code.UserErrorCode;
 import roomescape.dao.ReservationDao;
 import roomescape.dao.ReservationTimeDao;
 import roomescape.dao.ThemeDao;
+import roomescape.dao.UserDao;
 import roomescape.domain.Reservation;
 import roomescape.domain.ReservationTime;
 import roomescape.domain.Theme;
@@ -30,13 +31,15 @@ public class ReservationService {
     private final ReservationDao reservationDao;
     private final ReservationTimeDao reservationTimeDao;
     private final ThemeDao themeDao;
+    private final UserDao userDao;
     private final ClockProvider clockProvider;
 
-    public ReservationService(ReservationDao reservationDao, ReservationTimeDao reservationTimeDao,
-                              ThemeDao themeDao, ClockProvider clockProvider) {
+    public ReservationService(ReservationDao reservationDao, ReservationTimeDao reservationTimeDao, ThemeDao themeDao,
+                              UserDao userDao, ClockProvider clockProvider) {
         this.reservationDao = reservationDao;
         this.reservationTimeDao = reservationTimeDao;
         this.themeDao = themeDao;
+        this.userDao = userDao;
         this.clockProvider = clockProvider;
     }
 
@@ -60,7 +63,13 @@ public class ReservationService {
         validateUniqueReservation(request.date(), request.timeId(), request.themeId());
         validatePastDatetime(request.date(), reservationTime);
 
-        Reservation reservation = request.toReservation(reservationTime, theme);
+        User user = null;
+        if (Objects.nonNull(request.userId())) {
+            user = userDao.selectById(request.userId())
+                    .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
+        }
+
+        Reservation reservation = Reservation.createWithoutId(request.name(), request.date(), reservationTime, theme, user);
         Reservation savedReservation = reservationDao.insert(reservation);
         return ReservationResponse.from(savedReservation);
     }

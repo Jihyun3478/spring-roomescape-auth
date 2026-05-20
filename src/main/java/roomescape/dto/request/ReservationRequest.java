@@ -18,7 +18,8 @@ public record ReservationRequest(
         LocalDate date,
 
         long timeId,
-        long themeId
+        long themeId,
+        Long userId
 ) {
     public Reservation toReservation(ReservationTime reservationTime, Theme theme, User user) {
         return Reservation.createWithoutId(user.getName(), date, reservationTime, theme, user);

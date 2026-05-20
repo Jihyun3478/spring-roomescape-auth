@@ -19,19 +19,19 @@ public class LoginService {
     }
 
     public String login(String email, String password) {
-        User user = userDao.findByEmail(email)
-                .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
+        User user = userDao.selectByEmail(email)
+                .orElseThrow(() -> new RoomEscapeException(UserErrorCode.LOGIN_FAIL));
 
         if (!user.getPassword().equals(password)) {
-            throw new RoomEscapeException(UserErrorCode.INVALID_PASSWORD);
+            throw new RoomEscapeException(UserErrorCode.LOGIN_FAIL);
         }
         return createToken(user);
     }
 
     public User findUserByToken(String token) {
         long userId = extractUserId(token);
-        return userDao.findById(userId)
-                .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
+        return userDao.selectById(userId)
+                .orElseThrow(() -> new RoomEscapeException(UserErrorCode.UNAUTHORIZED));
     }
 
     private String createToken(User user) {

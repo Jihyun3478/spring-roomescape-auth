@@ -1,6 +1,7 @@
 package roomescape.dao;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -42,7 +43,20 @@ public class UserDao {
         return new User(generatedId.longValue(), user.getEmail(), user.getPassword(), user.getName(), user.getRoleType());
     }
 
-    public Optional<User> findByEmail(String email) {
+    public List<User> select(RoleType roleType) {
+        String sql = """
+                SELECT id, 
+                       email,
+                       password,
+                       name,
+                       role
+                FROM users
+                WHERE role = ?
+                """;
+        return jdbcTemplate.query(sql, ROW_MAPPER, roleType.name());
+    }
+
+    public Optional<User> selectByEmail(String email) {
         try {
             String sql = """
                     SELECT id, email, password, name, role
@@ -54,7 +68,7 @@ public class UserDao {
         }
     }
 
-    public Optional<User> findById(long id) {
+    public Optional<User> selectById(long id) {
         try {
             String sql = """
                     SELECT id, email, password, name, role
