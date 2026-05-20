@@ -94,6 +94,16 @@
         window.location.href = '/login.html?redirect=/admin-time.html';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     document.addEventListener('DOMContentLoaded', fetchAllTimes);
     document.getElementById('time-form').addEventListener('submit', addTime);
 
@@ -123,8 +133,8 @@
             const tbody = document.getElementById('time-table-body');
             tbody.innerHTML = times.map(time => `
                 <tr>
-                    <td>${time.id || time.timeId}</td>
-                    <td>${time.startAt}</td>
+                    <td>${escapeHtml(time.id || time.timeId)}</td>
+                    <td>${escapeHtml(time.startAt)}</td>
                     <td>
                         <button class="btn btn-danger btn-sm" onclick="deleteTime(${time.id || time.timeId})">삭제</button>
                     </td>

@@ -107,6 +107,16 @@
         window.location.href = '/login.html?redirect=/reservation.html';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function getRole() {
         if (!token) return null;
         const decoded = atob(token);
@@ -138,12 +148,12 @@
                 const themeList = document.getElementById('theme-list');
                 themeList.innerHTML = themes.map(theme => `
                     <div class="col-md-4">
-                        <div class="card h-100 theme-item" data-id="${theme.id}" style="cursor: pointer;">
-                            <img src="${theme.thumbnail}" class="card-img-top" alt="${theme.name}" height="100"
+                        <div class="card h-100 theme-item" data-id="${escapeHtml(theme.id)}" style="cursor: pointer;">
+                            <img src="${escapeHtml(theme.thumbnail)}" class="card-img-top" alt="${escapeHtml(theme.name)}" height="100"
                                  style="object-fit: cover;"
                                  onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                             <div class="card-body p-2 text-center">
-                                <h6 class="card-title mb-0">${theme.name}</h6>
+                                <h6 class="card-title mb-0">${escapeHtml(theme.name)}</h6>
                             </div>
                         </div>
                     </div>
@@ -175,9 +185,9 @@
                 timeList.innerHTML = times.map(time => `
                     <div class="col-4">
                         <div class="border rounded p-2 text-center time-slot ${time.isNotReserved ? '' : 'disabled bg-light text-muted'}"
-                             data-id="${time.id}"
+                             data-id="${escapeHtml(time.id)}"
                              ${!time.isNotReserved ? 'style="pointer-events: none;"' : ''}>
-                            ${time.startAt}
+                            ${escapeHtml(time.startAt)}
                         </div>
                     </div>
                 `).join('');

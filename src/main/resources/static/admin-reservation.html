@@ -25,11 +25,11 @@
         <div class="card-body">
             <h5 class="card-title">새 예약 추가</h5>
             <form class="row g-3" id="reservation-form">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label" for="date">날짜</label>
                     <input class="form-control" id="date" required type="date">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label" for="theme">테마</label>
                     <select class="form-select" id="theme" required>
                         <option disabled selected value="">테마 선택</option>
@@ -42,8 +42,14 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label" for="name">예약자</label>
+                    <label class="form-label" for="name">예약자명</label>
                     <input class="form-control" id="name" placeholder="이름" required type="text">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="user">회원 연결 (선택)</label>
+                    <select class="form-select" id="user">
+                        <option selected value="">회원 없음</option>
+                    </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button class="btn btn-primary w-100" type="submit">추가하기</button>
@@ -60,6 +66,7 @@
             <th>시간</th>
             <th>테마</th>
             <th>예약자</th>
+            <th>회원</th>
             <th>관리</th>
         </tr>
         </thead>
@@ -74,9 +81,20 @@
         window.location.href = '/login.html?redirect=/admin-reservation.html';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         fetchReservations();
         fetchThemes();
+        fetchUsers();
     });
 
     document.getElementById('date').addEventListener('change', fetchAvailableTimes);
@@ -100,11 +118,12 @@
             const tbody = document.getElementById('reservation-table-body');
             tbody.innerHTML = reservations.map(res => `
                 <tr>
-                    <td>${res.id}</td>
-                    <td>${res.date}</td>
-                    <td>${res.time.startAt}</td>
-                    <td>${res.theme.name}</td>
-                    <td>${res.name}</td>
+                    <td>${escapeHtml(res.id)}</td>
+                    <td>${escapeHtml(res.date)}</td>
+                    <td>${escapeHtml(res.time.startAt)}</td>
+                    <td>${escapeHtml(res.theme.name)}</td>
+                    <td>${escapeHtml(res.name)}</td>
+                    <td>${res.user ? escapeHtml(res.user.name) : '-'}</td>
                     <td>
                         <button class="btn btn-danger btn-sm" onclick="deleteReservation(${res.id})">삭제</button>
                     </td>
@@ -125,6 +144,22 @@
                     select.appendChild(option);
                 });
             });
+    }
+
+    function fetchUsers() {
+        fetch('/admin/users', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(response => response.json())
+        .then(users => {
+            const select = document.getElementById('user');
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email})`;
+                select.appendChild(option);
+            });
+        });
     }
 
     function fetchAvailableTimes() {
@@ -157,12 +192,17 @@
 
     function addReservation(event) {
         event.preventDefault();
+        const userId = document.getElementById('user').value;
         const payload = {
             date: document.getElementById('date').value,
             themeId: document.getElementById('theme').value,
             timeId: document.getElementById('time').value,
-            name: document.getElementById('name').value
+            name: document.getElementById('name').value,
         };
+
+        if (userId) {
+            payload.userId = parseInt(userId);
+        }
 
         fetch('/admin/reservations', {
             method: 'POST',

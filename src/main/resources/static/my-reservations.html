@@ -82,6 +82,16 @@
         window.location.href = '/login.html?redirect=/my-reservations.html';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function getRole() {
         if (!token) return null;
         const decoded = atob(token);
@@ -127,10 +137,10 @@
 
             tbody.innerHTML = reservations.map(res => `
                 <tr>
-                    <td>${res.id}</td>
-                    <td>${res.theme.name}</td>
-                    <td>${res.date}</td>
-                    <td>${res.time.startAt}</td>
+                    <td>${escapeHtml(res.id)}</td>
+                    <td>${escapeHtml(res.theme.name)}</td>
+                    <td>${escapeHtml(res.date)}</td>
+                    <td>${escapeHtml(res.time.startAt)}</td>
                     <td>
                         <button class="btn btn-outline-primary btn-sm"
                             onclick="openUpdateModal(${res.id}, ${res.theme.id})">변경</button>
@@ -190,7 +200,7 @@
                 }
 
                 select.innerHTML = '<option disabled selected value="">시간 선택</option>' +
-                    available.map(t => `<option value="${t.id}">${t.startAt}</option>`).join('');
+                    available.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.startAt)}</option>`).join('');
             });
     }
 

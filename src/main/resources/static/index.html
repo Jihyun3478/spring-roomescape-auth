@@ -50,6 +50,16 @@
 <script>
     const token = sessionStorage.getItem('token');
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function getRole() {
         if (!token) return null;
         const decoded = atob(token);
@@ -84,11 +94,11 @@
                     container.innerHTML += `
                         <div class="col-md-4">
                             <div class="card h-100 shadow-sm">
-                                <img src="${theme.thumbnail}" class="card-img-top" alt="${theme.name}"
+                                <img src="${escapeHtml(theme.thumbnail)}" class="card-img-top" alt="${escapeHtml(theme.name)}"
                                      onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
                                 <div class="card-body">
-                                    <h5 class="card-title">${theme.name}</h5>
-                                    <p class="card-text text-truncate">${theme.description}</p>
+                                    <h5 class="card-title">${escapeHtml(theme.name)}</h5>
+                                    <p class="card-text text-truncate">${escapeHtml(theme.description)}</p>
                                     <a href="/reservation.html" class="btn btn-outline-primary">예약하기</a>
                                 </div>
                             </div>

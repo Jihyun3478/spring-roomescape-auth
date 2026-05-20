@@ -101,6 +101,16 @@
         window.location.href = '/login.html?redirect=/admin-theme.html';
     }
 
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     document.addEventListener('DOMContentLoaded', fetchThemes);
     document.getElementById('theme-form').addEventListener('submit', addTheme);
 
@@ -121,11 +131,11 @@
             const tbody = document.getElementById('theme-table-body');
             tbody.innerHTML = themes.map(theme => `
                 <tr>
-                    <td>${theme.id}</td>
-                    <td><img src="${theme.thumbnail}" width="50" height="50" style="object-fit: cover;"
+                    <td>${escapeHtml(theme.id)}</td>
+                    <td><img src="${escapeHtml(theme.thumbnail)}" width="50" height="50" style="object-fit: cover;"
                              onerror="this.src='https://via.placeholder.com/50?text=No'"></td>
-                    <td>${theme.name}</td>
-                    <td>${theme.description}</td>
+                    <td>${escapeHtml(theme.name)}</td>
+                    <td>${escapeHtml(theme.description)}</td>
                     <td>
                         <button class="btn btn-danger btn-sm" onclick="deleteTheme(${theme.id})">삭제</button>
                     </td>
