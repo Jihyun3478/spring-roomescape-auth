@@ -161,7 +161,7 @@ class ReservationServiceTest {
         UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.now().plusDays(2), time2.getId());
 
         // when
-        ReservationResponse response = reservationService.update(saved.getId(), request);
+        ReservationResponse response = reservationService.update(saved.getId(), request, user);
 
         // then
         assertThat(response.date()).isEqualTo(LocalDate.now().plusDays(2));
@@ -171,10 +171,11 @@ class ReservationServiceTest {
     void 존재하지_않는_예약을_변경하면_예외가_발생한다() {
         // given
         ReservationTime time = saveTime(10, 0);
+        User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
         UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.now().plusDays(1), time.getId());
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(999L, request))
+        assertThatThrownBy(() -> reservationService.update(999L, request, user))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -189,7 +190,7 @@ class ReservationServiceTest {
         UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.of(2026, 4, 1), time.getId());
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), request))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), request, user))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -206,7 +207,7 @@ class ReservationServiceTest {
         UpdateReservationRequest request = new UpdateReservationRequest(date, time.getId());
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), request))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), request, user))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -219,13 +220,16 @@ class ReservationServiceTest {
         Reservation saved = saveReservation("브라운", LocalDate.of(2026, 5, 5), time, theme, user);
 
         // when & then
-        assertThatNoException().isThrownBy(() -> reservationService.delete(saved.getId()));
+        assertThatNoException().isThrownBy(() -> reservationService.delete(saved.getId(), user));
     }
 
     @Test
     void 존재하지_않는_예약을_삭제하면_예외가_발생한다() {
+        // given
+        User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
+
         // when & then
-        assertThatThrownBy(() -> reservationService.delete(999L))
+        assertThatThrownBy(() -> reservationService.delete(999L, user))
                 .isInstanceOf(RoomEscapeException.class);
     }
 

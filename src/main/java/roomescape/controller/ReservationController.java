@@ -48,14 +48,16 @@ public class ReservationController {
     @PatchMapping("/{reservationId}")
     public ResponseEntity<ReservationResponse> updateReservation(
             @PathVariable("reservationId") Long reservationId,
-            @RequestBody UpdateReservationRequest request) {
-        ReservationResponse response = reservationService.update(reservationId, request);
+            @RequestBody UpdateReservationRequest request,
+            @LoginUser User user) {
+        ReservationResponse response = reservationService.update(reservationId, request, user);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{reservationId}")
-    public ResponseEntity<Void> deleteReservation(@PathVariable("reservationId") Long reservationId) {
-        reservationService.delete(reservationId);
+    public ResponseEntity<Void> deleteReservation(@PathVariable("reservationId") Long reservationId,
+                                                  @LoginUser User user) {
+        reservationService.delete(reservationId, user);
         return ResponseEntity.noContent().build();
     }
 }

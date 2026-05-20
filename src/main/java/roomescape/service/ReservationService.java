@@ -3,6 +3,7 @@ package roomescape.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.config.ClockProvider;
@@ -10,6 +11,7 @@ import roomescape.common.exception.RoomEscapeException;
 import roomescape.common.exception.code.ReservationErrorCode;
 import roomescape.common.exception.code.ReservationTimeErrorCode;
 import roomescape.common.exception.code.ThemeErrorCode;
+import roomescape.common.exception.code.UserErrorCode;
 import roomescape.dao.ReservationDao;
 import roomescape.dao.ReservationTimeDao;
 import roomescape.dao.ThemeDao;
@@ -77,18 +79,33 @@ public class ReservationService {
                 .toList();
     }
 
-    public ReservationResponse update(Long reservationId, UpdateReservationRequest request) {
+    public ReservationResponse update(Long reservationId, UpdateReservationRequest request, User user) {
         Reservation reservation = getReservation(reservationId);
+        if (Objects.isNull(reservation.getUser()) || !reservation.getUser().getId().equals(user.getId())) {
+            throw new RoomEscapeException(ReservationErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         ReservationTime time = getTime(request.timeId());
-        validateUniqueExcludingSelf(request.date(), request.timeId(), reservation.getTheme().getId(),
-                reservation.getId());
+        validateUniqueExcludingSelf(request.date(), request.timeId(), reservation.getTheme().getId(), reservation.getId());
         validatePastDatetime(request.date(), time);
 
         Reservation updateReservation = reservationDao.update(reservationId, request.date(), request.timeId());
         return ReservationResponse.from(updateReservation);
     }
 
-    public void delete(Long reservationId) {
+    public void delete(Long reservationId, User user) {
+        Reservation reservation = getReservation(reservationId);
+        if (Objects.isNull(reservation.getUser()) || !reservation.getUser().getId().equals(user.getId())) {
+            throw new RoomEscapeException(ReservationErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        int deleted = reservationDao.delete(reservationId);
+        if (deleted == 0) {
+            throw new RoomEscapeException(ReservationErrorCode.NOT_FOUND);
+        }
+    }
+
+    public void deleteByAdmin(Long reservationId) {
         int deleted = reservationDao.delete(reservationId);
         if (deleted == 0) {
             throw new RoomEscapeException(ReservationErrorCode.NOT_FOUND);
