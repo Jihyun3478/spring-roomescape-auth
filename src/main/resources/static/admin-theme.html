@@ -119,10 +119,12 @@
             headers: { 'Authorization': 'Bearer ' + token }
         })
         .then(response => {
-            if (response.status === 403) {
-                alert('관리자만 접근 가능합니다.');
-                window.location.href = '/';
-                return Promise.reject('forbidden');
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('관리자만 접근 가능합니다.');
+                    window.location.href = '/';
+                }
+                return Promise.reject('auth-fail');
             }
         })
         .then(() => fetch('/themes'))
@@ -142,7 +144,7 @@
                 </tr>
             `).join('');
         })
-        .catch(err => { if (err !== 'forbidden') console.error(err); });
+        .catch(err => { if (err !== 'auth-fail') console.error(err); });
     }
 
     function addTheme(event) {
@@ -162,16 +164,16 @@
             body: JSON.stringify(payload)
         })
         .then(response => {
-            if (response.status === 403) {
-                alert('관리자만 접근 가능합니다.');
-                window.location.href = '/';
-                return;
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('관리자만 접근 가능합니다.');
+                    window.location.href = '/';
+                }
+                throw new Error('테마 추가 실패');
             }
-            if (response.ok) return response.json();
-            throw new Error('테마 추가 실패');
+            return response.json();
         })
         .then(data => {
-            if (!data) return;
             document.getElementById('modal-theme-id').textContent = data.id;
             document.getElementById('modal-theme-name').textContent = data.name;
             document.getElementById('modal-theme-description').textContent = data.description;
@@ -190,17 +192,17 @@
             headers: { 'Authorization': 'Bearer ' + token }
         })
         .then(response => {
-            if (response.status === 403) {
-                alert('관리자만 접근 가능합니다.');
-                window.location.href = '/';
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert('관리자만 접근 가능합니다.');
+                    window.location.href = '/';
+                    return;
+                }
+                alert('테마 삭제 실패');
                 return;
             }
-            if (response.ok) {
-                alert('테마가 삭제되었습니다.');
-                fetchThemes();
-            } else {
-                alert('테마 삭제 실패');
-            }
+            alert('테마가 삭제되었습니다.');
+            fetchThemes();
         });
     }
 </script>
