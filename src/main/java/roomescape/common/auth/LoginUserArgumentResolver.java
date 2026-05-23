@@ -9,7 +9,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.common.exception.code.UserErrorCode;
-import roomescape.domain.User;
+import roomescape.user.domain.User;
 
 public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver {
 

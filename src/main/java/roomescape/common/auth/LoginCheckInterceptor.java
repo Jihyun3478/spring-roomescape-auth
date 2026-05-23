@@ -4,9 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Objects;
 import org.springframework.web.servlet.HandlerInterceptor;
-import roomescape.domain.RoleType;
-import roomescape.domain.User;
-import roomescape.service.LoginService;
+import roomescape.user.domain.RoleType;
+import roomescape.user.domain.User;
+import roomescape.login.service.LoginService;
 
 public class LoginCheckInterceptor implements HandlerInterceptor {
 

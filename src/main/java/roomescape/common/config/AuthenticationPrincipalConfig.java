@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import roomescape.common.auth.LoginCheckInterceptor;
 import roomescape.common.auth.LoginUserArgumentResolver;
-import roomescape.service.LoginService;
+import roomescape.login.service.LoginService;
 
 @Configuration
 public class AuthenticationPrincipalConfig implements WebMvcConfigurer {

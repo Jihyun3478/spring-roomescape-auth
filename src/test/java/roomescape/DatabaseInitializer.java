@@ -2,9 +2,9 @@ package roomescape;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import roomescape.dao.UserDao;
-import roomescape.domain.RoleType;
-import roomescape.domain.User;
+import roomescape.user.dao.UserDao;
+import roomescape.user.domain.RoleType;
+import roomescape.user.domain.User;
 
 @Component
 public class DatabaseInitializer {
