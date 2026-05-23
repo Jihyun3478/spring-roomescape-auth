@@ -1,6 +1,16 @@
 -- user
 INSERT INTO users (email, password, name, role) VALUES ('admin@example.com', 'password', '관리자', 'ADMIN');
 INSERT INTO users (email, password, name, role) VALUES ('user@example.com', 'password', '사용자', 'MEMBER');
+INSERT INTO users (email, password, name, role) VALUES ('manager1@example.com', 'password', '매니저1', 'MANAGER');
+INSERT INTO users (email, password, name, role) VALUES ('manager2@example.com', 'password', '매니저2', 'MANAGER');
+
+-- shop
+INSERT INTO shop (name) VALUES ('달빛방탈출 강남점');
+INSERT INTO shop (name) VALUES ('달빛방탈출 홍대점');
+
+-- manager
+INSERT INTO manager (user_id, shop_id) VALUES (3, 1);
+INSERT INTO manager (user_id, shop_id) VALUES (4, 2);
 
 -- reservation_time
 INSERT INTO reservation_time (start_at)
@@ -14,20 +24,20 @@ VALUES ('10:00:00'),
        ('17:00:00'),
        ('18:00:00');
 
--- theme
-INSERT INTO theme (name, description, thumbnail)
-VALUES ('공포의 저택', '오래된 저택에서 탈출하세요', 'https://example.com/theme1.jpg'),
-       ('사라진 연구소', '비밀 연구소의 진실을 밝혀내세요', 'https://example.com/theme2.jpg'),
-       ('시간 여행자', '시간의 틈에서 탈출하세요', 'https://example.com/theme3.jpg'),
-       ('감옥 탈출', '제한 시간 안에 감옥을 탈출하세요', 'https://example.com/theme4.jpg'),
-       ('마법사의 방', '마법사의 숨겨진 방을 탐험하세요', 'https://example.com/theme5.jpg'),
-       ('좀비 바이러스', '바이러스가 퍼진 도시에서 살아남으세요', 'https://example.com/theme6.jpg'),
-       ('해적의 보물', '해적선에 숨겨진 보물을 찾으세요', 'https://example.com/theme7.jpg'),
-       ('스파이 미션', '비밀 요원이 되어 임무를 완수하세요', 'https://example.com/theme8.jpg'),
-       ('우주 정거장', '고장난 우주 정거장에서 탈출하세요', 'https://example.com/theme9.jpg'),
-       ('고대 유적', '고대 유적의 수수께끼를 풀어보세요', 'https://example.com/theme10.jpg'),
-       ('미스터리 호텔', '호텔에서 벌어진 사건을 해결하세요', 'https://example.com/theme11.jpg'),
-       ('지하 벙커', '폐쇄된 지하 벙커에서 탈출하세요', 'https://example.com/theme12.jpg');
+-- theme (shop_id 1: 강남점 테마 1~6, shop_id 2: 홍대점 테마 7~12)
+INSERT INTO theme (name, description, thumbnail, shop_id)
+VALUES ('공포의 저택', '오래된 저택에서 탈출하세요', 'https://example.com/theme1.jpg', 1),
+       ('사라진 연구소', '비밀 연구소의 진실을 밝혀내세요', 'https://example.com/theme2.jpg', 1),
+       ('시간 여행자', '시간의 틈에서 탈출하세요', 'https://example.com/theme3.jpg', 1),
+       ('감옥 탈출', '제한 시간 안에 감옥을 탈출하세요', 'https://example.com/theme4.jpg', 1),
+       ('마법사의 방', '마법사의 숨겨진 방을 탐험하세요', 'https://example.com/theme5.jpg', 1),
+       ('좀비 바이러스', '바이러스가 퍼진 도시에서 살아남으세요', 'https://example.com/theme6.jpg', 1),
+       ('해적의 보물', '해적선에 숨겨진 보물을 찾으세요', 'https://example.com/theme7.jpg', 2),
+       ('스파이 미션', '비밀 요원이 되어 임무를 완수하세요', 'https://example.com/theme8.jpg', 2),
+       ('우주 정거장', '고장난 우주 정거장에서 탈출하세요', 'https://example.com/theme9.jpg', 2),
+       ('고대 유적', '고대 유적의 수수께끼를 풀어보세요', 'https://example.com/theme10.jpg', 2),
+       ('미스터리 호텔', '호텔에서 벌어진 사건을 해결하세요', 'https://example.com/theme11.jpg', 2),
+       ('지하 벙커', '폐쇄된 지하 벙커에서 탈출하세요', 'https://example.com/theme12.jpg', 2);
 
 -- reservation (user_id 없는 관리자 예약 데이터)
 -- theme_id 1: 12건
