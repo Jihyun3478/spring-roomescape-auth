@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import roomescape.reservation.domain.Reservation;
 import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.shop.domain.Shop;
 import roomescape.user.domain.RoleType;
 import roomescape.theme.domain.Theme;
 import roomescape.user.domain.User;
@@ -20,6 +21,11 @@ import roomescape.user.domain.User;
 @Repository
 public class ReservationDao {
     private static final RowMapper<Reservation> ROW_MAPPER = (resultSet, rowNum) -> {
+        Shop shop = new Shop(
+                resultSet.getLong("id"),
+                resultSet.getString("name")
+        );
+
         ReservationTime reservationTime = new ReservationTime(
                 resultSet.getLong("time_id"),
                 resultSet.getTime("start_at").toLocalTime()
@@ -29,7 +35,8 @@ public class ReservationDao {
                 resultSet.getLong("theme_id"),
                 resultSet.getString("theme_name"),
                 resultSet.getString("description"),
-                resultSet.getString("thumbnail")
+                resultSet.getString("thumbnail"),
+                shop
         );
 
         long userId = resultSet.getLong("user_id");
@@ -148,24 +155,27 @@ public class ReservationDao {
 
     private String baseSelectSql() {
         return """
-                SELECT r.id,
-                       r.name as reservation_name,
-                       r.date,
-                       rt.id as time_id,
-                       rt.start_at,
-                       t.id as theme_id,
-                       t.name as theme_name,
-                       t.description,
-                       t.thumbnail,
-                       u.id as user_id,
-                       u.email,
-                       u.password,
-                       u.name as user_name,
-                       u.role
-                FROM reservation AS r
-                INNER JOIN reservation_time AS rt ON r.time_id = rt.id
-                INNER JOIN theme AS t ON r.theme_id = t.id
-                LEFT JOIN users AS u ON r.user_id = u.id
-                """;
+            SELECT r.id,
+                   r.name as reservation_name,
+                   r.date,
+                   rt.id as time_id,
+                   rt.start_at,
+                   t.id as theme_id,
+                   t.name as theme_name,
+                   t.description,
+                   t.thumbnail,
+                   s.id as shop_id,
+                   s.name as shop_name,
+                   u.id as user_id,
+                   u.email,
+                   u.password,
+                   u.name as user_name,
+                   u.role
+            FROM reservation AS r
+            INNER JOIN reservation_time AS rt ON r.time_id = rt.id
+            INNER JOIN theme AS t ON r.theme_id = t.id
+            LEFT JOIN shop AS s ON t.shop_id = s.id
+            LEFT JOIN users AS u ON r.user_id = u.id
+            """;
     }
 }

@@ -1,14 +1,16 @@
 package roomescape.theme.domain;
 
 import java.util.Objects;
+import roomescape.shop.domain.Shop;
 
 public class Theme {
     private final Long id;
     private final String name;
     private final String description;
     private final String thumbnail;
+    private final Shop shop;
 
-    public Theme(Long id, String name, String description, String thumbnail) {
+    public Theme(Long id, String name, String description, String thumbnail, Shop shop) {
         Objects.requireNonNull(name, "테마 이름은 필수값 입니다.");
         Objects.requireNonNull(description, "테마 설명은 필수값 입니다.");
         Objects.requireNonNull(thumbnail, "테마 썸네일은 필수값 입니다.");
@@ -16,10 +18,11 @@ public class Theme {
         this.name = name;
         this.description = description;
         this.thumbnail = thumbnail;
+        this.shop = shop;
     }
 
-    public static Theme createWithoutId(String name, String description, String thumbnail) {
-        return new Theme(null, name, description, thumbnail);
+    public static Theme createWithoutId(String name, String description, String thumbnail, Shop shop) {
+        return new Theme(null, name, description, thumbnail, shop);
     }
 
     public Long getId() {
@@ -36,6 +39,10 @@ public class Theme {
 
     public String getThumbnail() {
         return thumbnail;
+    }
+
+    public Shop getShop() {
+        return shop;
     }
 
     @Override

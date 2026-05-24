@@ -122,7 +122,7 @@ class ReservationTimeServiceTest {
     }
 
     private Theme saveTheme(String name, String description, String thumbnail) {
-        return themeDao.insert(Theme.createWithoutId(name, description, thumbnail));
+        return themeDao.insert(Theme.createWithoutId(name, description, thumbnail,  null));
     }
 
     private void saveReservation(String name, LocalDate date, ReservationTime time, Theme theme) {

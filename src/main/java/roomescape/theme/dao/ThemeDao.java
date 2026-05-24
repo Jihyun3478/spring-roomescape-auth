@@ -4,23 +4,36 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import roomescape.shop.domain.Shop;
 import roomescape.theme.domain.Theme;
 
 @Repository
 public class ThemeDao {
-    private static final RowMapper<Theme> ROW_MAPPER = (resultSet, rowNum) ->
-            new Theme(
-                    resultSet.getLong("id"),
-                    resultSet.getString("name"),
-                    resultSet.getString("description"),
-                    resultSet.getString("thumbnail")
+    private static final RowMapper<Theme> ROW_MAPPER = (resultSet, rowNum) -> {
+        Shop shop = null;
+        long shopId = resultSet.getLong("shop_id");
+        if (shopId != 0) {
+            shop = new Shop(
+                    shopId,
+                    resultSet.getString("shop_name")
             );
+        }
+
+        return new Theme(
+                resultSet.getLong("id"),
+                resultSet.getString("name"),
+                resultSet.getString("description"),
+                resultSet.getString("thumbnail"),
+                shop
+        );
+    };
 
     private final JdbcTemplate jdbcTemplate;
     private final SimpleJdbcInsert jdbcInsert;
@@ -37,24 +50,31 @@ public class ThemeDao {
         parameters.put("name", theme.getName());
         parameters.put("description", theme.getDescription());
         parameters.put("thumbnail", theme.getThumbnail());
+        if (Objects.nonNull(theme.getShop())) {
+            parameters.put("shop_id", theme.getShop().getId());
+        }
 
         Number generatedId = jdbcInsert.executeAndReturnKey(parameters);
         return new Theme(
                 generatedId.longValue(),
                 theme.getName(),
                 theme.getDescription(),
-                theme.getThumbnail()
+                theme.getThumbnail(),
+                theme.getShop()
         );
     }
 
     public Optional<Theme> selectById(Long themeId) {
         String sql = """
-                SELECT id, 
-                       name, 
-                       description,
-                       thumbnail
-                FROM theme
-                WHERE id = ?""";
+                SELECT t.id, 
+                       t.name, 
+                       t.description,
+                       t.thumbnail,
+                       s.id as shop_id,
+                       s.name as shop_name
+                FROM theme t
+                LEFT JOIN shop s ON t.shop_id = s.id
+                WHERE t.id = ?""";
 
         try {
             return Optional.of(jdbcTemplate.queryForObject(sql, ROW_MAPPER, themeId));
@@ -65,11 +85,16 @@ public class ThemeDao {
 
     public List<Theme> selectAll() {
         String sql = """
-                SELECT id, 
-                       name, 
-                       description,
-                       thumbnail
-                FROM theme""";
+               
+                SELECT t.id,
+                       t.name,
+                       t.description,
+                       t.thumbnail,
+                       s.id as shop_id,
+                       s.name as shop_name
+                FROM theme t
+                LEFT JOIN shop s ON t.shop_id = s.id
+                """;
         return jdbcTemplate.query(sql, ROW_MAPPER);
     }
 
@@ -78,12 +103,14 @@ public class ThemeDao {
                 SELECT t.id,
                        t.name,
                        t.description,
-                       t.thumbnail
+                       t.thumbnail,
+                       s.id as shop_id,
+                       s.name as shop_name
                 FROM reservation AS r
-                INNER JOIN theme AS t 
-                ON r.theme_id = t.id
+                INNER JOIN theme AS t ON r.theme_id = t.id
+                    LEFT JOIN shop s ON t.shop_id = s.id
                 WHERE r.date BETWEEN ? AND ?
-                GROUP BY t.id, t.name, t.description, t.thumbnail
+                GROUP BY t.id, t.name, t.description, t.thumbnail, s.id, s.name
                 ORDER BY COUNT(r.id) DESC
                 LIMIT 10
                 """;

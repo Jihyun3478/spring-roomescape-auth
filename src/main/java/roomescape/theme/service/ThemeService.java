@@ -29,7 +29,7 @@ public class ThemeService {
     public ThemeResponse addTheme(ThemeCommand command) {
         validateUniqueTheme(command.name());
 
-        Theme theme = Theme.createWithoutId(command.name(), command.description(), command.thumbnail());
+        Theme theme = Theme.createWithoutId(command.name(), command.description(), command.thumbnail(), null);
         Theme savedTheme = themeDao.insert(theme);
         return ThemeResponse.from(savedTheme);
     }

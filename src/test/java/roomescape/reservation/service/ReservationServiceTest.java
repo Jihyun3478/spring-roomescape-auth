@@ -257,7 +257,7 @@ class ReservationServiceTest {
     }
 
     private Theme saveTheme(String name, String description, String thumbnail) {
-        return themeDao.insert(Theme.createWithoutId(name, description, thumbnail));
+        return themeDao.insert(Theme.createWithoutId(name, description, thumbnail, null));
     }
 
     private User saveUser(String email, String password, String name, RoleType roleType) {
