@@ -11,10 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import roomescape.reservation.domain.Reservation;
-import roomescape.reservationtime.domain.ReservationTime;
-import roomescape.theme.domain.Theme;
 import roomescape.reservationtime.dao.ReservationTimeDao;
+import roomescape.reservationtime.domain.ReservationTime;
 import roomescape.theme.dao.ThemeDao;
+import roomescape.theme.domain.Theme;
 
 @JdbcTest
 @Import({ReservationDao.class, ReservationTimeDao.class, ThemeDao.class})
@@ -50,15 +50,19 @@ class ReservationDaoTest {
     @Test
     void 예약_목록을_조회한다() {
         // given
-        ReservationTime savedTime = saveTime(10, 0);
+        ReservationTime savedTime1 = saveTime(10, 0);
+        ReservationTime savedTime2 = saveTime(11, 0);
+        ReservationTime savedTime3 = saveTime(12, 0);
+        ReservationTime savedTime4 = saveTime(13, 0);
+        ReservationTime savedTime5 = saveTime(14, 0);
         Theme savedTheme = saveTheme("방탈출1", "설명", "https://asdfsdf.sdfs");
         LocalDate date = LocalDate.of(2026, 5, 5);
 
-        reservationDao.insert(Reservation.createWithoutId("브라운", date, savedTime, savedTheme, null));
-        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime, savedTheme, null));
-        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime, savedTheme, null));
-        reservationDao.insert(Reservation.createWithoutId("러로", date, savedTime, savedTheme, null));
-        reservationDao.insert(Reservation.createWithoutId("밤밤", date, savedTime, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("브라운", date, savedTime1, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("로지", date, savedTime2, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("러키", date, savedTime3, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("러로", date, savedTime4, savedTheme, null));
+        reservationDao.insert(Reservation.createWithoutId("밤밤", date, savedTime5, savedTheme, null));
 
         // when
         List<Reservation> reservations = reservationDao.select();

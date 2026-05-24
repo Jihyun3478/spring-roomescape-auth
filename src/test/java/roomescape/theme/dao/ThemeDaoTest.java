@@ -253,8 +253,6 @@ class ThemeDaoTest {
         saveReservation(oldDate, time7, theme12);
         saveReservation(oldDate, time8, theme12);
         saveReservation(oldDate, time9, theme12);
-        saveReservation(oldDate, time1, theme12);
-        saveReservation(oldDate, time2, theme12);
     }
 
     private Theme saveTheme(String name, String description, String thumbnail) {
