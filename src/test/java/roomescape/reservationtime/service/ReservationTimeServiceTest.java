@@ -13,14 +13,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.reservation.dao.ReservationDao;
-import roomescape.reservationtime.dao.ReservationTimeDao;
-import roomescape.theme.dao.ThemeDao;
 import roomescape.reservation.domain.Reservation;
+import roomescape.reservationtime.dao.ReservationTimeDao;
 import roomescape.reservationtime.domain.ReservationTime;
-import roomescape.theme.domain.Theme;
-import roomescape.reservationtime.dto.request.ReservationTimeRequest;
+import roomescape.reservationtime.dto.command.ReservationTimeCommand;
 import roomescape.reservationtime.dto.response.CreateReservationTimeResponse;
 import roomescape.reservationtime.dto.response.ReservationTimeResponse;
+import roomescape.theme.dao.ThemeDao;
+import roomescape.theme.domain.Theme;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Transactional
@@ -40,9 +40,11 @@ class ReservationTimeServiceTest {
 
     @Test
     void 예약_시간을_추가한다() {
+        // given
+        ReservationTimeCommand command = new ReservationTimeCommand(LocalTime.of(10, 0));
+
         // when
-        CreateReservationTimeResponse response = reservationTimeService.addReservationTime(
-                new ReservationTimeRequest(LocalTime.of(10, 0)));
+        CreateReservationTimeResponse response = reservationTimeService.addReservationTime(command);
 
         // then
         assertThat(response.startAt()).isEqualTo(LocalTime.of(10, 0));

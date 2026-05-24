@@ -13,17 +13,17 @@ import roomescape.common.exception.code.ReservationTimeErrorCode;
 import roomescape.common.exception.code.ThemeErrorCode;
 import roomescape.common.exception.code.UserErrorCode;
 import roomescape.reservation.dao.ReservationDao;
-import roomescape.reservationtime.dao.ReservationTimeDao;
-import roomescape.theme.dao.ThemeDao;
-import roomescape.user.dao.UserDao;
 import roomescape.reservation.domain.Reservation;
-import roomescape.reservationtime.domain.ReservationTime;
-import roomescape.theme.domain.Theme;
-import roomescape.user.domain.User;
-import roomescape.reservation.dto.request.ReservationRequest;
-import roomescape.reservation.dto.request.UpdateReservationRequest;
-import roomescape.reservation.dto.request.UserReservationRequest;
+import roomescape.reservation.dto.command.CreateAdminReservationCommand;
+import roomescape.reservation.dto.command.CreateReservationCommand;
+import roomescape.reservation.dto.command.UpdateReservationCommand;
 import roomescape.reservation.dto.response.ReservationResponse;
+import roomescape.reservationtime.dao.ReservationTimeDao;
+import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.theme.dao.ThemeDao;
+import roomescape.theme.domain.Theme;
+import roomescape.user.dao.UserDao;
+import roomescape.user.domain.User;
 
 @Service
 @Transactional
@@ -43,33 +43,35 @@ public class ReservationService {
         this.clockProvider = clockProvider;
     }
 
-    public ReservationResponse addReservation(UserReservationRequest request, User user) {
-        ReservationTime reservationTime = getTime(request.timeId());
-        Theme theme = getTheme(request.themeId());
+    public ReservationResponse addReservation(CreateReservationCommand command) {
+        ReservationTime reservationTime = getTime(command.timeId());
+        Theme theme = getTheme(command.themeId());
 
-        validateUniqueReservation(request.date(), request.timeId(), request.themeId());
-        validatePastDatetime(request.date(), reservationTime);
+        validateUniqueReservation(command.date(), command.timeId(), command.themeId());
+        validatePastDatetime(command.date(), reservationTime);
 
-        Reservation reservation = Reservation.createWithoutId(
-                user.getName(), request.date(), reservationTime, theme, user);
+        User user = userDao.selectById(command.userId())
+                .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
+
+        Reservation reservation = Reservation.createWithoutId(user.getName(), command.date(), reservationTime, theme, user);
         Reservation savedReservation = reservationDao.insert(reservation);
         return ReservationResponse.from(savedReservation);
     }
 
-    public ReservationResponse addReservationByAdmin(ReservationRequest request) {
-        ReservationTime reservationTime = getTime(request.timeId());
-        Theme theme = getTheme(request.themeId());
+    public ReservationResponse addReservationByAdmin(CreateAdminReservationCommand command) {
+        ReservationTime reservationTime = getTime(command.timeId());
+        Theme theme = getTheme(command.themeId());
 
-        validateUniqueReservation(request.date(), request.timeId(), request.themeId());
-        validatePastDatetime(request.date(), reservationTime);
+        validateUniqueReservation(command.date(), command.timeId(), command.themeId());
+        validatePastDatetime(command.date(), reservationTime);
 
         User user = null;
-        if (Objects.nonNull(request.userId())) {
-            user = userDao.selectById(request.userId())
+        if (Objects.nonNull(command.userId())) {
+            user = userDao.selectById(command.userId())
                     .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
         }
 
-        Reservation reservation = Reservation.createWithoutId(request.name(), request.date(), reservationTime, theme, user);
+        Reservation reservation = Reservation.createWithoutId(command.name(), command.date(), reservationTime, theme, user);
         Reservation savedReservation = reservationDao.insert(reservation);
         return ReservationResponse.from(savedReservation);
     }
@@ -88,17 +90,17 @@ public class ReservationService {
                 .toList();
     }
 
-    public ReservationResponse update(Long reservationId, UpdateReservationRequest request, User user) {
+    public ReservationResponse update(Long reservationId, UpdateReservationCommand command) {
         Reservation reservation = getReservation(reservationId);
-        if (Objects.isNull(reservation.getUser()) || !reservation.getUser().getId().equals(user.getId())) {
+        if (Objects.isNull(reservation.getUser()) || !reservation.getUser().getId().equals(command.userId())) {
             throw new RoomEscapeException(ReservationErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        ReservationTime time = getTime(request.timeId());
-        validateUniqueExcludingSelf(request.date(), request.timeId(), reservation.getTheme().getId(), reservation.getId());
-        validatePastDatetime(request.date(), time);
+        ReservationTime time = getTime(command.timeId());
+        validateUniqueExcludingSelf(command.date(), command.timeId(), reservation.getTheme().getId(), reservation.getId());
+        validatePastDatetime(command.date(), time);
 
-        Reservation updateReservation = reservationDao.update(reservationId, request.date(), request.timeId());
+        Reservation updateReservation = reservationDao.update(reservationId, command.date(), command.timeId());
         return ReservationResponse.from(updateReservation);
     }
 

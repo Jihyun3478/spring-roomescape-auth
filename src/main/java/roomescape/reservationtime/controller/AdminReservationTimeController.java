@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import roomescape.reservationtime.dto.command.ReservationTimeCommand;
 import roomescape.reservationtime.dto.request.ReservationTimeRequest;
 import roomescape.reservationtime.dto.response.CreateReservationTimeResponse;
 import roomescape.reservationtime.service.ReservationTimeService;
@@ -27,7 +28,8 @@ public class AdminReservationTimeController {
     @PostMapping
     public ResponseEntity<CreateReservationTimeResponse> addReservationTime(
             @Valid @RequestBody ReservationTimeRequest request) {
-        CreateReservationTimeResponse response = reservationTimeService.addReservationTime(request);
+        ReservationTimeCommand command = new ReservationTimeCommand(request.startAt());
+        CreateReservationTimeResponse response = reservationTimeService.addReservationTime(command);
         return ResponseEntity.created(URI.create(LOCATION_DEFAULT_VALUE + response.id()))
                 .body(response);
     }

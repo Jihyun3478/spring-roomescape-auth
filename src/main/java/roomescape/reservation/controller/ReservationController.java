@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import roomescape.common.auth.LoginUser;
+import roomescape.reservation.dto.command.CreateReservationCommand;
+import roomescape.reservation.dto.command.UpdateReservationCommand;
 import roomescape.user.domain.User;
 import roomescape.reservation.dto.request.UpdateReservationRequest;
 import roomescape.reservation.dto.request.UserReservationRequest;
@@ -34,7 +36,10 @@ public class ReservationController {
     public ResponseEntity<ReservationResponse> addReservation(
             @Valid @RequestBody UserReservationRequest request,
             @LoginUser User user) {
-        ReservationResponse response = reservationService.addReservation(request, user);
+        CreateReservationCommand command = new CreateReservationCommand(
+                request.date(), request.timeId(), request.themeId(), user.getId()
+        );
+        ReservationResponse response = reservationService.addReservation(command);
         return ResponseEntity.created(URI.create(LOCATION_DEFAULT_VALUE + response.id()))
                 .body(response);
     }
@@ -50,7 +55,10 @@ public class ReservationController {
             @PathVariable("reservationId") Long reservationId,
             @RequestBody UpdateReservationRequest request,
             @LoginUser User user) {
-        ReservationResponse response = reservationService.update(reservationId, request, user);
+        UpdateReservationCommand command = new UpdateReservationCommand(
+                request.date(), request.timeId(), user.getId()
+        );
+        ReservationResponse response = reservationService.update(reservationId, command);
         return ResponseEntity.ok(response);
     }
 

@@ -11,7 +11,7 @@ import roomescape.common.exception.code.ThemeErrorCode;
 import roomescape.reservation.dao.ReservationDao;
 import roomescape.theme.dao.ThemeDao;
 import roomescape.theme.domain.Theme;
-import roomescape.theme.dto.request.ThemeRequest;
+import roomescape.theme.dto.command.ThemeCommand;
 import roomescape.theme.dto.response.ThemeResponse;
 
 @Service
@@ -29,9 +29,11 @@ public class ThemeService {
         this.clockProvider = clockProvider;
     }
 
-    public ThemeResponse addTheme(ThemeRequest request) {
-        validateUniqueTheme(request.name());
-        Theme savedTheme = themeDao.insert(request.toTheme());
+    public ThemeResponse addTheme(ThemeCommand command) {
+        validateUniqueTheme(command.name());
+
+        Theme theme = Theme.createWithoutId(command.name(), command.description(), command.thumbnail());
+        Theme savedTheme = themeDao.insert(theme);
         return ThemeResponse.from(savedTheme);
     }
 

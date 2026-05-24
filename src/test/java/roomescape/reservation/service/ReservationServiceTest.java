@@ -13,17 +13,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.reservation.dao.ReservationDao;
-import roomescape.reservationtime.dao.ReservationTimeDao;
-import roomescape.theme.dao.ThemeDao;
-import roomescape.user.dao.UserDao;
 import roomescape.reservation.domain.Reservation;
-import roomescape.reservationtime.domain.ReservationTime;
-import roomescape.user.domain.RoleType;
-import roomescape.theme.domain.Theme;
-import roomescape.user.domain.User;
-import roomescape.reservation.dto.request.UpdateReservationRequest;
-import roomescape.reservation.dto.request.UserReservationRequest;
+import roomescape.reservation.dto.command.CreateReservationCommand;
+import roomescape.reservation.dto.command.UpdateReservationCommand;
 import roomescape.reservation.dto.response.ReservationResponse;
+import roomescape.reservationtime.dao.ReservationTimeDao;
+import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.theme.dao.ThemeDao;
+import roomescape.theme.domain.Theme;
+import roomescape.user.dao.UserDao;
+import roomescape.user.domain.RoleType;
+import roomescape.user.domain.User;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Transactional
@@ -50,10 +50,12 @@ class ReservationServiceTest {
         ReservationTime time = saveTime(10, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        UserReservationRequest request = new UserReservationRequest(LocalDate.now().plusDays(1), time.getId(), theme.getId());
+        CreateReservationCommand command = new CreateReservationCommand(
+                LocalDate.now().plusDays(1), time.getId(), theme.getId(), user.getId()
+        );
 
         // when
-        ReservationResponse response = reservationService.addReservation(request, user);
+        ReservationResponse response = reservationService.addReservation(command);
 
         // then
         assertThat(response)
@@ -66,10 +68,12 @@ class ReservationServiceTest {
         // given
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        UserReservationRequest request = new UserReservationRequest(LocalDate.of(2026, 5, 5), 999L, theme.getId());
+        CreateReservationCommand command = new CreateReservationCommand(
+                LocalDate.of(2026, 5, 5), 999L, theme.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(request, user))
+        assertThatThrownBy(() -> reservationService.addReservation(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -78,10 +82,12 @@ class ReservationServiceTest {
         // given
         ReservationTime time = saveTime(10, 0);
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        UserReservationRequest request = new UserReservationRequest(LocalDate.of(2026, 5, 5), time.getId(), 999L);
+        CreateReservationCommand command = new CreateReservationCommand(
+                LocalDate.of(2026, 5, 5), time.getId(), 999L, user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(request, user))
+        assertThatThrownBy(() -> reservationService.addReservation(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -94,10 +100,12 @@ class ReservationServiceTest {
         LocalDate date = LocalDate.now().plusDays(1);
         saveReservation("브라운", date, time, theme, user);
 
-        UserReservationRequest request = new UserReservationRequest(date, time.getId(), theme.getId());
+        CreateReservationCommand command = new CreateReservationCommand(
+                date, time.getId(), theme.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(request, user))
+        assertThatThrownBy(() -> reservationService.addReservation(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -107,10 +115,12 @@ class ReservationServiceTest {
         ReservationTime time = saveTime(10, 0);
         Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com");
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        UserReservationRequest request = new UserReservationRequest(LocalDate.of(2026, 4, 1), time.getId(), theme.getId());
+        CreateReservationCommand command = new CreateReservationCommand(
+                LocalDate.of(2026, 4, 1), time.getId(), theme.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(request, user))
+        assertThatThrownBy(() -> reservationService.addReservation(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -158,10 +168,12 @@ class ReservationServiceTest {
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
         Reservation saved = saveReservation("브라운", LocalDate.now().plusDays(1), time1, theme, user);
 
-        UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.now().plusDays(2), time2.getId());
+        UpdateReservationCommand command = new UpdateReservationCommand(
+                LocalDate.now().plusDays(2), time2.getId(), user.getId()
+        );
 
         // when
-        ReservationResponse response = reservationService.update(saved.getId(), request, user);
+        ReservationResponse response = reservationService.update(saved.getId(), command);
 
         // then
         assertThat(response.date()).isEqualTo(LocalDate.now().plusDays(2));
@@ -172,10 +184,12 @@ class ReservationServiceTest {
         // given
         ReservationTime time = saveTime(10, 0);
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.now().plusDays(1), time.getId());
+        UpdateReservationCommand command = new UpdateReservationCommand(
+                LocalDate.now().plusDays(1), time.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(999L, request, user))
+        assertThatThrownBy(() -> reservationService.update(999L, command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -187,10 +201,12 @@ class ReservationServiceTest {
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
         Reservation saved = saveReservation("브라운", LocalDate.now().plusDays(1), time, theme, user);
 
-        UpdateReservationRequest request = new UpdateReservationRequest(LocalDate.of(2026, 4, 1), time.getId());
+        UpdateReservationCommand command = new UpdateReservationCommand(
+                LocalDate.of(2026, 4, 1), time.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), request, user))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -204,10 +220,12 @@ class ReservationServiceTest {
         saveReservation("브라운", date, time, theme, user);
         Reservation saved = saveReservation("로지", LocalDate.now().plusDays(2), time, theme, user);
 
-        UpdateReservationRequest request = new UpdateReservationRequest(date, time.getId());
+        UpdateReservationCommand command = new UpdateReservationCommand(
+                date, time.getId(), user.getId()
+        );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), request, user))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 

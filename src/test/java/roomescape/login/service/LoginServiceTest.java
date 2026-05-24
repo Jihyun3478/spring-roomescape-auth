@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.exception.RoomEscapeException;
+import roomescape.login.dto.command.LoginCommand;
 import roomescape.user.dao.UserDao;
 import roomescape.user.domain.RoleType;
 import roomescape.user.domain.User;
@@ -25,10 +26,11 @@ class LoginServiceTest {
     @Test
     void 로그인에_성공하면_토큰을_반환한다() {
         // given
-        User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
+        saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
+        LoginCommand command = new LoginCommand("user@test.com", "password");
 
         // when
-        String token = loginService.login("user@test.com", "password");
+        String token = loginService.login(command);
 
         // then
         assertThat(token).isNotNull();
@@ -36,26 +38,31 @@ class LoginServiceTest {
 
     @Test
     void 존재하지_않는_이메일로_로그인하면_예외가_발생한다() {
+        // given
+        LoginCommand command = new LoginCommand("notexist@test.com", "password");
+
         // when & then
-        assertThatThrownBy(() -> loginService.login("notexist@test.com", "password"))
+        assertThatThrownBy(() -> loginService.login(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
     @Test
     void 비밀번호가_틀리면_예외가_발생한다() {
         // given
+        LoginCommand command = new LoginCommand("user@test.com", "wrongpassword");
         saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
 
         // when & then
-        assertThatThrownBy(() -> loginService.login("user@test.com", "wrongpassword"))
+        assertThatThrownBy(() -> loginService.login(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
     @Test
     void 토큰으로_유저를_조회한다() {
         // given
+        LoginCommand command = new LoginCommand("user@test.com", "password");
         User user = saveUser("user@test.com", "password", "브라운", RoleType.MEMBER);
-        String token = loginService.login("user@test.com", "password");
+        String token = loginService.login(command);
 
         // when
         User foundUser = loginService.findUserByToken(token);

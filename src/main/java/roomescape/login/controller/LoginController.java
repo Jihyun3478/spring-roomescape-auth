@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import roomescape.login.dto.command.LoginCommand;
 import roomescape.login.dto.request.LoginRequest;
 import roomescape.login.service.LoginService;
 
@@ -19,7 +20,8 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
-        String token = loginService.login(request.email(), request.password());
+        LoginCommand command = new LoginCommand(request.email(), request.password());
+        String token = loginService.login(command);
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + token)
                 .build();

@@ -20,12 +20,12 @@ import roomescape.DatabaseInitializer;
 import roomescape.common.config.ClockProvider;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.reservation.dao.ReservationDao;
-import roomescape.reservationtime.dao.ReservationTimeDao;
-import roomescape.theme.dao.ThemeDao;
 import roomescape.reservation.domain.Reservation;
+import roomescape.reservationtime.dao.ReservationTimeDao;
 import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.theme.dao.ThemeDao;
 import roomescape.theme.domain.Theme;
-import roomescape.theme.dto.request.ThemeRequest;
+import roomescape.theme.dto.command.ThemeCommand;
 import roomescape.theme.dto.response.ThemeResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -61,8 +61,11 @@ class ThemeServiceTest {
 
     @Test
     void 테마를_추가한다() {
+        // given
+        ThemeCommand command = new ThemeCommand("방탈출1", "설명", "https://thumb.com");
+
         // when
-        ThemeResponse response = themeService.addTheme(new ThemeRequest("방탈출1", "설명", "https://thumb.com"));
+        ThemeResponse response = themeService.addTheme(command);
 
         // then
         assertThat(response.name()).isEqualTo("방탈출1");
@@ -71,10 +74,11 @@ class ThemeServiceTest {
     @Test
     void 이미_존재하는_테마명으로_추가하면_예외가_발생한다() {
         // given
+        ThemeCommand command = new ThemeCommand("방탈출1", "설명2", "https://thumb2.com");
         saveTheme("방탈출1", "설명", "https://thumb.com");
 
         // when & then
-        assertThatThrownBy(() -> themeService.addTheme(new ThemeRequest("방탈출1", "설명2", "https://thumb2.com")))
+        assertThatThrownBy(() -> themeService.addTheme(command))
                 .isInstanceOf(RoomEscapeException.class);
     }
 

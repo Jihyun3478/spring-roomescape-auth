@@ -10,6 +10,7 @@ import roomescape.common.exception.code.ReservationTimeErrorCode;
 import roomescape.common.exception.code.ThemeErrorCode;
 import roomescape.reservation.dao.ReservationDao;
 import roomescape.reservationtime.dao.ReservationTimeDao;
+import roomescape.reservationtime.dto.command.ReservationTimeCommand;
 import roomescape.theme.dao.ThemeDao;
 import roomescape.reservation.domain.Reservation;
 import roomescape.reservationtime.domain.ReservationTime;
@@ -31,8 +32,8 @@ public class ReservationTimeService {
         this.reservationDao = reservationDao;
     }
 
-    public CreateReservationTimeResponse addReservationTime(ReservationTimeRequest request) {
-        ReservationTime reservationTime = request.toReservationTime();
+    public CreateReservationTimeResponse addReservationTime(ReservationTimeCommand command) {
+        ReservationTime reservationTime = ReservationTime.createWithoutId(command.startAt());
         ReservationTime newReservationTime = reservationTimeDao.insert(reservationTime);
         return CreateReservationTimeResponse.from(newReservationTime);
     }

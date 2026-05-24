@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.common.exception.code.UserErrorCode;
+import roomescape.login.dto.command.LoginCommand;
 import roomescape.user.dao.UserDao;
 import roomescape.user.domain.User;
 
@@ -18,11 +19,11 @@ public class LoginService {
         this.userDao = userDao;
     }
 
-    public String login(String email, String password) {
-        User user = userDao.selectByEmail(email)
+    public String login(LoginCommand command) {
+        User user = userDao.selectByEmail(command.email())
                 .orElseThrow(() -> new RoomEscapeException(UserErrorCode.LOGIN_FAIL));
 
-        if (!user.getPassword().equals(password)) {
+        if (!user.getPassword().equals(command.password())) {
             throw new RoomEscapeException(UserErrorCode.LOGIN_FAIL);
         }
         return createToken(user);
