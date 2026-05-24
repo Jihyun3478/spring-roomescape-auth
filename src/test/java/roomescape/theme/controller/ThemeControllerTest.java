@@ -1,13 +1,9 @@
 package roomescape.theme.controller;
 
 import static org.hamcrest.Matchers.is;
-import static org.mockito.BDDMockito.given;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,16 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import roomescape.DatabaseInitializer;
-import roomescape.common.config.ClockProvider;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 public class ThemeControllerTest {
-
-    @MockitoBean
-    private ClockProvider clockProvider;
 
     @Autowired
     private DatabaseInitializer databaseInitializer;
@@ -34,12 +25,6 @@ public class ThemeControllerTest {
     @BeforeEach
     void setUp() {
         databaseInitializer.insertDefaultUsers();
-
-        given(clockProvider.getClock())
-                .willReturn(Clock.fixed(
-                        Instant.parse("2026-04-28T09:00:00Z"),
-                        ZoneOffset.UTC
-                ));
 
         adminToken = RestAssured.given().log().all()
                 .contentType(ContentType.JSON)

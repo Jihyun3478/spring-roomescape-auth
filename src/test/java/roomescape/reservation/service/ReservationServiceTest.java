@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class ReservationServiceTest {
         );
 
         // when
-        ReservationResponse response = reservationService.addReservation(command);
+        ReservationResponse response = reservationService.addReservation(command, LocalDateTime.now());
 
         // then
         assertThat(response)
@@ -73,7 +74,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(command))
+        assertThatThrownBy(() -> reservationService.addReservation(command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -87,7 +88,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(command))
+        assertThatThrownBy(() -> reservationService.addReservation(command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -105,7 +106,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(command))
+        assertThatThrownBy(() -> reservationService.addReservation(command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -120,7 +121,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.addReservation(command))
+        assertThatThrownBy(() -> reservationService.addReservation(command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -173,7 +174,7 @@ class ReservationServiceTest {
         );
 
         // when
-        ReservationResponse response = reservationService.update(saved.getId(), command);
+        ReservationResponse response = reservationService.update(saved.getId(), command, LocalDateTime.now());
 
         // then
         assertThat(response.date()).isEqualTo(LocalDate.now().plusDays(2));
@@ -189,7 +190,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(999L, command))
+        assertThatThrownBy(() -> reservationService.update(999L, command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -206,7 +207,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), command))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 
@@ -225,7 +226,7 @@ class ReservationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> reservationService.update(saved.getId(), command))
+        assertThatThrownBy(() -> reservationService.update(saved.getId(), command, LocalDateTime.now()))
                 .isInstanceOf(RoomEscapeException.class);
     }
 

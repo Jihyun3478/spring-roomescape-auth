@@ -3,21 +3,15 @@ package roomescape.theme.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
 
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import roomescape.DatabaseInitializer;
-import roomescape.common.config.ClockProvider;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.reservation.dao.ReservationDao;
 import roomescape.reservation.domain.Reservation;
@@ -30,9 +24,6 @@ import roomescape.theme.dto.response.ThemeResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class ThemeServiceTest {
-
-    @MockitoBean
-    private ClockProvider clockProvider;
 
     @Autowired
     private DatabaseInitializer databaseInitializer;
@@ -52,11 +43,6 @@ class ThemeServiceTest {
     @BeforeEach
     void setUp() {
         databaseInitializer.clear();
-        given(clockProvider.getClock())
-                .willReturn(Clock.fixed(
-                        Instant.parse("2026-04-28T09:00:00Z"),
-                        ZoneOffset.UTC
-                ));
     }
 
     @Test
@@ -98,11 +84,10 @@ class ThemeServiceTest {
 
     @Test
     void 인기_테마를_조회한다() {
-        // given
         Theme popularTheme = saveTheme("공포의 저택", "설명", "https://thumb.com");
-        Theme normalTheme = saveTheme("사라진 연구소", "설명", "https://thumb.com");
+        Theme normalTheme = saveTheme("사라진 연구소", "설명", "https://thumb2.com");
 
-        LocalDate today = LocalDate.now(clockProvider.getClock()); // 2026-05-06
+        LocalDate today = LocalDate.now();
         ReservationTime time = timeDao.insert(ReservationTime.createWithoutId(LocalTime.of(10, 0)));
 
         reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, popularTheme, null));
@@ -110,10 +95,8 @@ class ThemeServiceTest {
         reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(3), time, popularTheme, null));
         reservationDao.insert(Reservation.createWithoutId("예약자", today.minusDays(1), time, normalTheme, null));
 
-        // when
-        List<ThemeResponse> responses = themeService.getPopularThemes();
+        List<ThemeResponse> responses = themeService.getPopularThemes(today);
 
-        // then
         assertThat(responses.get(0).name()).isEqualTo("공포의 저택");
     }
 

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import roomescape.common.config.ClockProvider;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.common.exception.code.ThemeErrorCode;
 import roomescape.reservation.dao.ReservationDao;
@@ -21,12 +20,10 @@ public class ThemeService {
 
     private final ThemeDao themeDao;
     private final ReservationDao reservationDao;
-    private final ClockProvider clockProvider;
 
-    public ThemeService(ThemeDao themeDao, ReservationDao reservationDao, ClockProvider clockProvider) {
+    public ThemeService(ThemeDao themeDao, ReservationDao reservationDao) {
         this.themeDao = themeDao;
         this.reservationDao = reservationDao;
-        this.clockProvider = clockProvider;
     }
 
     public ThemeResponse addTheme(ThemeCommand command) {
@@ -45,11 +42,11 @@ public class ThemeService {
     }
 
     @Transactional(readOnly = true)
-    public List<ThemeResponse> getPopularThemes() {
-        LocalDate endDate = LocalDate.now(clockProvider.getClock());
-        LocalDate startDate = endDate.minusDays(POPULAR_THEME_PERIOD_DAYS);
+    public List<ThemeResponse> getPopularThemes(LocalDate today) {
+        LocalDate startDate = today.minusDays(POPULAR_THEME_PERIOD_DAYS);
+        LocalDate endDate = today.minusDays(1);
 
-        List<Theme> popularThemes = themeDao.selectPopularThemesByPeriod(startDate, endDate.minusDays(1));
+        List<Theme> popularThemes = themeDao.selectPopularThemesByPeriod(startDate, endDate);
         return popularThemes.stream()
                 .map(ThemeResponse::from)
                 .toList();

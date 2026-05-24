@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import roomescape.common.config.ClockProvider;
 import roomescape.common.exception.RoomEscapeException;
 import roomescape.common.exception.code.ReservationErrorCode;
 import roomescape.common.exception.code.ReservationTimeErrorCode;
@@ -32,23 +31,21 @@ public class ReservationService {
     private final ReservationTimeDao reservationTimeDao;
     private final ThemeDao themeDao;
     private final UserDao userDao;
-    private final ClockProvider clockProvider;
 
     public ReservationService(ReservationDao reservationDao, ReservationTimeDao reservationTimeDao, ThemeDao themeDao,
-                              UserDao userDao, ClockProvider clockProvider) {
+                              UserDao userDao) {
         this.reservationDao = reservationDao;
         this.reservationTimeDao = reservationTimeDao;
         this.themeDao = themeDao;
         this.userDao = userDao;
-        this.clockProvider = clockProvider;
     }
 
-    public ReservationResponse addReservation(CreateReservationCommand command) {
+    public ReservationResponse addReservation(CreateReservationCommand command, LocalDateTime now) {
         ReservationTime reservationTime = getTime(command.timeId());
         Theme theme = getTheme(command.themeId());
 
         validateUniqueReservation(command.date(), command.timeId(), command.themeId());
-        validatePastDatetime(command.date(), reservationTime);
+        validatePastDatetime(command.date(), reservationTime, now);
 
         User user = userDao.selectById(command.userId())
                 .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
@@ -58,12 +55,12 @@ public class ReservationService {
         return ReservationResponse.from(savedReservation);
     }
 
-    public ReservationResponse addReservationByAdmin(CreateAdminReservationCommand command) {
+    public ReservationResponse addReservationByAdmin(CreateAdminReservationCommand command, LocalDateTime now) {
         ReservationTime reservationTime = getTime(command.timeId());
         Theme theme = getTheme(command.themeId());
 
         validateUniqueReservation(command.date(), command.timeId(), command.themeId());
-        validatePastDatetime(command.date(), reservationTime);
+        validatePastDatetime(command.date(), reservationTime, now);
 
         User user = null;
         if (Objects.nonNull(command.userId())) {
@@ -71,7 +68,8 @@ public class ReservationService {
                     .orElseThrow(() -> new RoomEscapeException(UserErrorCode.NOT_FOUND));
         }
 
-        Reservation reservation = Reservation.createWithoutId(command.name(), command.date(), reservationTime, theme, user);
+        Reservation reservation = Reservation.createWithoutId(command.name(), command.date(), reservationTime, theme,
+                user);
         Reservation savedReservation = reservationDao.insert(reservation);
         return ReservationResponse.from(savedReservation);
     }
@@ -90,7 +88,7 @@ public class ReservationService {
                 .toList();
     }
 
-    public ReservationResponse update(Long reservationId, UpdateReservationCommand command) {
+    public ReservationResponse update(Long reservationId, UpdateReservationCommand command, LocalDateTime now) {
         Reservation reservation = getReservation(reservationId);
         if (Objects.isNull(reservation.getUser()) || !reservation.getUser().getId().equals(command.userId())) {
             throw new RoomEscapeException(ReservationErrorCode.UNAUTHORIZED_ACCESS);
@@ -98,7 +96,7 @@ public class ReservationService {
 
         ReservationTime time = getTime(command.timeId());
         validateUniqueExcludingSelf(command.date(), command.timeId(), reservation.getTheme().getId(), reservation.getId());
-        validatePastDatetime(command.date(), time);
+        validatePastDatetime(command.date(), time, now);
 
         Reservation updateReservation = reservationDao.update(reservationId, command.date(), command.timeId());
         return ReservationResponse.from(updateReservation);
@@ -147,8 +145,7 @@ public class ReservationService {
         }
     }
 
-    private void validatePastDatetime(LocalDate date, ReservationTime reservationTime) {
-        LocalDateTime now = LocalDateTime.now(clockProvider.getClock());
+    private void validatePastDatetime(LocalDate date, ReservationTime reservationTime, LocalDateTime now) {
         LocalDateTime reservationDateAndTime = LocalDateTime.of(date, reservationTime.getStartAt());
         if (reservationDateAndTime.isBefore(now)) {
             throw new RoomEscapeException(ReservationErrorCode.PAST_DATETIME);

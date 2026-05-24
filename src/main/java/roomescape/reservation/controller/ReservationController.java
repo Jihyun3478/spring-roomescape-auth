@@ -2,6 +2,7 @@ package roomescape.reservation.controller;
 
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import roomescape.common.auth.LoginUser;
 import roomescape.reservation.dto.command.CreateReservationCommand;
 import roomescape.reservation.dto.command.UpdateReservationCommand;
-import roomescape.user.domain.User;
 import roomescape.reservation.dto.request.UpdateReservationRequest;
 import roomescape.reservation.dto.request.UserReservationRequest;
 import roomescape.reservation.dto.response.ReservationResponse;
 import roomescape.reservation.service.ReservationService;
+import roomescape.user.domain.User;
 
 @RestController
 @RequestMapping("/reservations")
@@ -39,7 +40,7 @@ public class ReservationController {
         CreateReservationCommand command = new CreateReservationCommand(
                 request.date(), request.timeId(), request.themeId(), user.getId()
         );
-        ReservationResponse response = reservationService.addReservation(command);
+        ReservationResponse response = reservationService.addReservation(command, LocalDateTime.now());
         return ResponseEntity.created(URI.create(LOCATION_DEFAULT_VALUE + response.id()))
                 .body(response);
     }
@@ -58,7 +59,7 @@ public class ReservationController {
         UpdateReservationCommand command = new UpdateReservationCommand(
                 request.date(), request.timeId(), user.getId()
         );
-        ReservationResponse response = reservationService.update(reservationId, command);
+        ReservationResponse response = reservationService.update(reservationId, command, LocalDateTime.now());
         return ResponseEntity.ok(response);
     }
 
