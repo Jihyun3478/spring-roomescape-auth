@@ -16,6 +16,8 @@ public record ThemeRequest(
         @NotBlank(message = "썸네일은 필수값 입니다.")
         @Size(max = 100, message = "테마 썸네일은 100자 이하여야 합니다.")
         @URL(message = "썸네일은 URL 형식이어야 합니다.")
-        String thumbnail
+        String thumbnail,
+
+        Long shopId
 ) {
 }

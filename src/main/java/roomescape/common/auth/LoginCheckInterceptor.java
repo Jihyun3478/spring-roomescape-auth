@@ -33,6 +33,11 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return false;
             }
+
+            if (request.getRequestURI().startsWith("/manager") && user.getRoleType() != RoleType.MANAGER) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return false;
+            }
         } catch (Exception exception) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;

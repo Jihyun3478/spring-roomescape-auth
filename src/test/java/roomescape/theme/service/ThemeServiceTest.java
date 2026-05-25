@@ -47,23 +47,18 @@ class ThemeServiceTest {
 
     @Test
     void 테마를_추가한다() {
-        // given
-        ThemeCommand command = new ThemeCommand("방탈출1", "설명", "https://thumb.com");
+        ThemeCommand command = new ThemeCommand("방탈출1", "설명", "https://thumb.com", null);
 
-        // when
         ThemeResponse response = themeService.addTheme(command);
 
-        // then
         assertThat(response.name()).isEqualTo("방탈출1");
     }
 
     @Test
     void 이미_존재하는_테마명으로_추가하면_예외가_발생한다() {
-        // given
-        ThemeCommand command = new ThemeCommand("방탈출1", "설명2", "https://thumb2.com");
+        ThemeCommand command = new ThemeCommand("방탈출1", "설명2", "https://thumb2.com", null);
         saveTheme("방탈출1", "설명", "https://thumb.com");
 
-        // when & then
         assertThatThrownBy(() -> themeService.addTheme(command))
                 .isInstanceOf(RoomEscapeException.class);
     }

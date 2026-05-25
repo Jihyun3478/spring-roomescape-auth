@@ -116,6 +116,20 @@ public class ReservationDao {
         return jdbcTemplate.query(sql, ROW_MAPPER, themeId, date);
     }
 
+    public List<Reservation> selectByShopId(long shopId) {
+        String sql = baseSelectSql() + " WHERE s.id = ?";
+        return jdbcTemplate.query(sql, ROW_MAPPER, shopId);
+    }
+
+    public Optional<Reservation> selectByIdAndShopId(long reservationId, long shopId) {
+        try {
+            String sql = baseSelectSql() + " WHERE r.id = ? AND s.id = ?";
+            return Optional.of(jdbcTemplate.queryForObject(sql, ROW_MAPPER, reservationId, shopId));
+        } catch (EmptyResultDataAccessException exception) {
+            return Optional.empty();
+        }
+    }
+
     public boolean existsByTimeId(long timeId) {
         String sql = "SELECT COUNT(*) > 0 FROM reservation WHERE time_id = ?";
         return jdbcTemplate.queryForObject(sql, Boolean.class, timeId);

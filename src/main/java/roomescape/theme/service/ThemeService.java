@@ -2,12 +2,16 @@ package roomescape.theme.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.common.exception.RoomEscapeException;
+import roomescape.common.exception.code.ShopErrorCode;
 import roomescape.common.exception.code.ThemeErrorCode;
 import roomescape.reservation.dao.ReservationDao;
+import roomescape.shop.dao.ShopDao;
+import roomescape.shop.domain.Shop;
 import roomescape.theme.dao.ThemeDao;
 import roomescape.theme.domain.Theme;
 import roomescape.theme.dto.command.ThemeCommand;
@@ -20,16 +24,24 @@ public class ThemeService {
 
     private final ThemeDao themeDao;
     private final ReservationDao reservationDao;
+    private final ShopDao shopDao;
 
-    public ThemeService(ThemeDao themeDao, ReservationDao reservationDao) {
+    public ThemeService(ThemeDao themeDao, ReservationDao reservationDao, ShopDao shopDao) {
         this.themeDao = themeDao;
         this.reservationDao = reservationDao;
+        this.shopDao = shopDao;
     }
 
     public ThemeResponse addTheme(ThemeCommand command) {
         validateUniqueTheme(command.name());
 
-        Theme theme = Theme.createWithoutId(command.name(), command.description(), command.thumbnail(), null);
+        Shop shop = null;
+        if (Objects.nonNull(command.shopId())) {
+            shop = shopDao.selectById(command.shopId())
+                    .orElseThrow(() -> new RoomEscapeException(ShopErrorCode.NOT_FOUND));
+        }
+
+        Theme theme = Theme.createWithoutId(command.name(), command.description(), command.thumbnail(), shop);
         Theme savedTheme = themeDao.insert(theme);
         return ThemeResponse.from(savedTheme);
     }

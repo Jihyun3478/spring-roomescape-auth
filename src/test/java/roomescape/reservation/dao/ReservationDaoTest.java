@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
@@ -13,11 +14,13 @@ import org.springframework.context.annotation.Import;
 import roomescape.reservation.domain.Reservation;
 import roomescape.reservationtime.dao.ReservationTimeDao;
 import roomescape.reservationtime.domain.ReservationTime;
+import roomescape.shop.dao.ShopDao;
+import roomescape.shop.domain.Shop;
 import roomescape.theme.dao.ThemeDao;
 import roomescape.theme.domain.Theme;
 
 @JdbcTest
-@Import({ReservationDao.class, ReservationTimeDao.class, ThemeDao.class})
+@Import({ReservationDao.class, ReservationTimeDao.class, ThemeDao.class, ShopDao.class})
 class ReservationDaoTest {
 
     @Autowired
@@ -28,6 +31,9 @@ class ReservationDaoTest {
 
     @Autowired
     private ThemeDao themeDao;
+
+    @Autowired
+    private ShopDao shopDao;
 
     @Test
     void 예약을_생성한다() {
@@ -142,6 +148,61 @@ class ReservationDaoTest {
     }
 
     @Test
+    void 매장_아이디로_예약_목록을_조회한다() {
+        // given
+        Shop shop1 = shopDao.insert("달빛방탈출 강남점");
+        Shop shop2 = shopDao.insert("달빛방탈출 홍대점");
+        ReservationTime time = saveTime(10, 0);
+        Theme theme1 = saveTheme("방탈출1", "설명", "https://thumb.com", shop1);
+        Theme theme2 = saveTheme("방탈출2", "설명", "https://thumb.com", shop2);
+        reservationDao.insert(Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme1, null));
+        reservationDao.insert(Reservation.createWithoutId("로지", LocalDate.of(2026, 5, 6), time, theme2, null));
+
+        // when
+        List<Reservation> result = reservationDao.selectByShopId(shop1.getId());
+
+        // then
+        assertAll(
+                () -> assertThat(result).hasSize(1),
+                () -> assertThat(result.getFirst().getName()).isEqualTo("브라운")
+        );
+    }
+
+    @Test
+    void 예약_아이디와_매장_아이디로_예약을_조회한다() {
+        // given
+        Shop shop = shopDao.insert("달빛방탈출 강남점");
+        ReservationTime time = saveTime(10, 0);
+        Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com", shop);
+        Reservation saved = reservationDao.insert(
+                Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme, null));
+
+        // when
+        Optional<Reservation> found = reservationDao.selectByIdAndShopId(saved.getId(), shop.getId());
+
+        // then
+        assertThat(found).isPresent();
+        assertThat(found.get().getName()).isEqualTo("브라운");
+    }
+
+    @Test
+    void 다른_매장_아이디로_조회하면_빈_객체를_반환한다() {
+        // given
+        Shop shop1 = shopDao.insert("달빛방탈출 강남점");
+        Shop shop2 = shopDao.insert("달빛방탈출 홍대점");
+        ReservationTime time = saveTime(10, 0);
+        Theme theme = saveTheme("방탈출1", "설명", "https://thumb.com", shop1);
+        Reservation saved = reservationDao.insert(
+                Reservation.createWithoutId("브라운", LocalDate.of(2026, 5, 5), time, theme, null));
+
+        // when
+        Optional<Reservation> found = reservationDao.selectByIdAndShopId(saved.getId(), shop2.getId());
+
+        // then
+        assertThat(found).isEmpty();
+    }
+
+    @Test
     void 날짜_시간_테마가_모두_같은_예약이_존재하면_true를_반환한다() {
         // given
         ReservationTime time = saveTime(10, 0);
@@ -206,6 +267,10 @@ class ReservationDaoTest {
 
     private ReservationTime saveTime(int hour, int minute) {
         return timeDao.insert(ReservationTime.createWithoutId(LocalTime.of(hour, minute)));
+    }
+
+    private Theme saveTheme(String name, String description, String thumbnail, Shop shop) {
+        return themeDao.insert(Theme.createWithoutId(name, description, thumbnail, shop));
     }
 
     private Theme saveTheme(String name, String description, String thumbnail) {

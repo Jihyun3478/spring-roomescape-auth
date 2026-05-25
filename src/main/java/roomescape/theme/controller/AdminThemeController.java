@@ -30,7 +30,8 @@ public class AdminThemeController {
         ThemeCommand command = new ThemeCommand(
                 request.name(),
                 request.description(),
-                request.thumbnail()
+                request.thumbnail(),
+                request.shopId()
         );
         ThemeResponse response = themeService.addTheme(command);
         return ResponseEntity.created(URI.create(LOCATION_DEFAULT_VALUE + response.id()))
@@ -40,7 +41,6 @@ public class AdminThemeController {
     @DeleteMapping("/{themeId}")
     public ResponseEntity<Void> deleteTheme(@PathVariable("themeId") Long themeId) {
         themeService.deleteTheme(themeId);
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

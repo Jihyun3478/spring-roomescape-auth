@@ -1,9 +1,12 @@
 package roomescape.manager.dao;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import roomescape.manager.domain.Manager;
 import roomescape.shop.domain.Shop;
@@ -38,9 +41,22 @@ public class ManagerDao {
     };
 
     private final JdbcTemplate jdbcTemplate;
+    private final SimpleJdbcInsert jdbcInsert;
 
     public ManagerDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("manager")
+                .usingGeneratedKeyColumns("id");
+    }
+
+    public Manager insert(long userId, long shopId) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("user_id", userId);
+        parameters.put("shop_id", shopId);
+
+        Number generatedId = jdbcInsert.executeAndReturnKey(parameters);
+        return new Manager(generatedId.longValue(), null, null);
     }
 
     public Optional<Manager> selectByUserId(long userId) {

@@ -1,10 +1,13 @@
 package roomescape.shop.dao;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import roomescape.shop.domain.Shop;
 
@@ -18,9 +21,21 @@ public class ShopDao {
     };
 
     private final JdbcTemplate jdbcTemplate;
+    private final SimpleJdbcInsert jdbcInsert;
 
     public ShopDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("shop")
+                .usingGeneratedKeyColumns("id");
+    }
+
+    public Shop insert(String name) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("name", name);
+
+        Number generatedId = jdbcInsert.executeAndReturnKey(parameters);
+        return new Shop(generatedId.longValue(), name);
     }
 
     public List<Shop> select() {
