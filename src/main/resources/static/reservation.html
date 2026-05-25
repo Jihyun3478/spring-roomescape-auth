@@ -8,6 +8,7 @@
         body { background-color: #f8f9fa; }
         .reservation-container { max-width: 800px; margin: 3rem auto; padding: 2rem; background: white; border-radius: 10px; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); }
         .theme-selected { border: 2px solid #0d6efd !important; }
+        .shop-selected { border: 2px solid #0d6efd !important; background-color: #e7f0ff; }
         .time-slot { cursor: pointer; transition: all 0.2s; }
         .time-slot:not(.disabled):hover { background-color: #e9ecef; }
         .time-slot.selected { background-color: #0d6efd; color: white; border-color: #0d6efd; }
@@ -79,17 +80,24 @@
         <h2 class="text-center mb-4">방탈출 예약</h2>
 
         <div class="mb-4">
-            <h5>1. 테마 선택</h5>
-            <div class="row g-3 mt-1" id="theme-list"></div>
+            <h5>1. 매장 선택</h5>
+            <div class="row g-3 mt-1" id="shop-list"></div>
         </div>
 
         <div class="mb-4">
-            <h5>2. 날짜 선택</h5>
+            <h5>2. 테마 선택</h5>
+            <div class="row g-3 mt-1" id="theme-list">
+                <p class="text-muted">매장을 먼저 선택해주세요.</p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h5>3. 날짜 선택</h5>
             <input class="form-control" id="reservation-date" min="" type="date">
         </div>
 
         <div class="mb-4">
-            <h5>3. 시간 선택</h5>
+            <h5>4. 시간 선택</h5>
             <div class="row g-2 mt-1" id="time-list">
                 <p class="text-muted">테마와 날짜를 먼저 선택해주세요.</p>
             </div>
@@ -127,6 +135,7 @@
         document.getElementById('admin-menu').style.display = 'block';
     }
 
+    let selectedShopId = null;
     let selectedThemeId = null;
     let selectedTimeId = null;
 
@@ -136,17 +145,51 @@
         dateInput.min = today;
         dateInput.value = today;
 
-        fetchThemes();
+        fetchShops();
         dateInput.addEventListener('change', fetchTimes);
         document.getElementById('submit-reservation').addEventListener('click', submitReservation);
     });
 
-    function fetchThemes() {
+    function fetchShops() {
+        fetch('/shops')
+            .then(response => response.json())
+            .then(shops => {
+                const shopList = document.getElementById('shop-list');
+                shopList.innerHTML = shops.map(shop => `
+                    <div class="col-md-4">
+                        <div class="card h-100 shop-item p-3 text-center" data-id="${escapeHtml(shop.id)}" style="cursor: pointer;">
+                            <h6 class="mb-0">${escapeHtml(shop.name)}</h6>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.querySelectorAll('.shop-item').forEach(item => {
+                    item.addEventListener('click', function () {
+                        document.querySelectorAll('.shop-item').forEach(i => i.classList.remove('shop-selected'));
+                        this.classList.add('shop-selected');
+                        selectedShopId = this.dataset.id;
+                        selectedThemeId = null;
+                        selectedTimeId = null;
+                        fetchThemes(selectedShopId);
+                        checkValidation();
+                    });
+                });
+            });
+    }
+
+    function fetchThemes(shopId) {
         fetch('/themes')
             .then(response => response.json())
             .then(themes => {
+                const filtered = themes.filter(t => t.shop && String(t.shop.id) === String(shopId));
                 const themeList = document.getElementById('theme-list');
-                themeList.innerHTML = themes.map(theme => `
+
+                if (filtered.length === 0) {
+                    themeList.innerHTML = '<p class="text-muted">해당 매장에 테마가 없습니다.</p>';
+                    return;
+                }
+
+                themeList.innerHTML = filtered.map(theme => `
                     <div class="col-md-4">
                         <div class="card h-100 theme-item" data-id="${escapeHtml(theme.id)}" style="cursor: pointer;">
                             <img src="${escapeHtml(theme.thumbnail)}" class="card-img-top" alt="${escapeHtml(theme.name)}" height="100"
@@ -204,7 +247,7 @@
     }
 
     function checkValidation() {
-        document.getElementById('submit-reservation').disabled = !(selectedThemeId && selectedTimeId);
+        document.getElementById('submit-reservation').disabled = !(selectedShopId && selectedThemeId && selectedTimeId);
     }
 
     function submitReservation() {
@@ -224,7 +267,7 @@
         })
         .then(response => {
             if (response.ok) return response.json();
-            return response.json().then(err => { throw new Error(err.message || '예약 실패'); });
+            return response.json().then(err => { throw new Error(err.detail || '예약 실패'); });
         })
         .then(data => {
             document.getElementById('modal-reservation-id').textContent = data.id;
